@@ -47,7 +47,8 @@ use strict; use warnings FATAL => 'uninitialized';
 	join "/",
 	    map {
 		local $_= /^\./ ? "dot.$_" : $_;
-		s{/}{--}sg
+		s{/}{--}sg;
+		$_
 	    } @{$s->items};
     }
 
