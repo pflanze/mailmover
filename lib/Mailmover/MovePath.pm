@@ -73,7 +73,7 @@ use strict; use warnings FATAL => 'uninitialized';
     sub append {
 	@_==2 or die "wrong number of arguments";
 	my ($a,$b)=@_;
-	UNIVERSAL::isa($b, "MovePath") or die "wrong type of $b";
+	UNIVERSAL::isa($b, "Mailmover::MovePath::MovePath") or die "wrong type of $b";
 	$a->items_set(array_append ($a->items, $b->items))
     }
 

@@ -17,7 +17,7 @@ Mailmover::Lib
 
 package Mailmover::Lib;
 @ISA="Exporter"; require Exporter;
-@EXPORT=qw(analyze_file);
+@EXPORT=qw(analyze_file is_reply);
 @EXPORT_OK=qw();
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 

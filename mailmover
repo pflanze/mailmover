@@ -29,12 +29,13 @@ use Chj::WithRepl qw(push_withrepl WithRepl_eval);
 push_withrepl (0) if DEBUG;
 use Scalar::Util 'tainted';
 use Chj::xopendir;
-use Chj::xperlfunc 'xlinkunlink';
+use Chj::xperlfunc ':all';
 use Chj::xtmpfile;
 use Chj::singlequote;
 use Chj::chompspace;
 use Chj::xsysopen 'xsysopen_excl';
 use Chj::xopen 'xopen_read';
+use Mailmover::MovePath;
 
 use Mailmover::detaint;
 $ENV{PATH}= detaint ($ENV{PATH}); # just trust it, it's always under
@@ -258,10 +259,11 @@ sub conditional_move_file($ $ ) {
 		    } else {
 			# hacky / should be an option?
 			$type="" if $type eq "unbekannt";
+			my @perhaps_type= length($type) ? $type : ();
 			$folderpath=
 			  ($flag_sourceforge_original ?
-			   MovePath("Moved", $type, "original")
-			   : MovePath ("Moved", $type)) ->append($folderpath);
+			   MovePath("Moved", @perhaps_type, "original")
+			   : MovePath ("Moved", @perhaps_type)) ->append($folderpath);
 			#/hacky
 			my @pathparts= $folderpath->string_split($targetbase);
 			my $sub= $maildirbasefolder;
