@@ -115,8 +115,7 @@ sub maybe_header {
     }
 }
 
-# XX rename to maybe_first_header; etc.
-sub first_header {
+sub maybe_first_header {
     my $s=shift;
     ($s->headers(@_))[0]
 }
@@ -306,7 +305,7 @@ sub mailinglist_id {
 
 sub is_spam {
     my $self=shift;
-    if (my $status=$self->first_header("X-Spam-Status")) {
+    if (my $status=$self->maybe_first_header("X-Spam-Status")) {
 	if ($status=~ /^\s*yes\b/si) {
 	    return 1;
 	} else {
@@ -319,7 +318,7 @@ sub is_spam {
 
 sub spamscore {#ps. ebenso wie is_spam: was wenn multiple spamchecks were done?
     my $self=shift;
-    if (my $status=$self->first_header("X-Spam-Status")) {
+    if (my $status=$self->maybe_first_header("X-Spam-Status")) {
 	if ($status=~ /score=(-?\d+(?:\.\d+)?)/){
 	    $1
 	} else {

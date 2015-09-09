@@ -78,7 +78,7 @@ sub analyze_file($;$$) {
     my $from= $head->header_ignoringidenticalcopies("from");
     my $content;
     my $messageid= lazy {
-	pick_out_of_anglebrackets($head->first_header("message-id"))
+	pick_out_of_anglebrackets($head->maybe_first_header("message-id"))
     };
 
     my $spamscore= $head->spamscore;
@@ -301,7 +301,7 @@ sub is_reply {
 	return 1 if $ownsubjectstable->exists($subj);
 	# ev. todo: hier auch noch mailingliste berücksichtigen? also subject.liste-kombination soll matchen?.
     }
-    my $in_reply_to = pick_out_of_anglebrackets($mail->first_header("In-Reply-To")); # many (broken?) clients actually do seem to send multiple such headers
+    my $in_reply_to = pick_out_of_anglebrackets($mail->maybe_first_header("In-Reply-To")); # many (broken?) clients actually do seem to send multiple such headers
     return unless defined $in_reply_to;
     my $ownmsgidtable= Chj::FileStore::PIndex->new($ownmsgid_base);
     return
@@ -318,7 +318,7 @@ sub is_reply {
 sub save_is_own {
     my ($mail) = @_;
     my $ownmsgidtable= Chj::FileStore::PIndex->new($ownmsgid_base);
-    $ownmsgidtable->add(scalar pick_out_of_anglebrackets($mail->first_header("message-id")),"");
+    $ownmsgidtable->add(scalar pick_out_of_anglebrackets($mail->maybe_first_header("message-id")),"");
     if (my $subj= _eingestampftessubject($mail)) {
 	my $ownsubjectstable= Chj::FileStore::PIndex->new($ownsubjects_base);
 	$ownsubjectstable->add($subj,"");
