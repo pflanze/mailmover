@@ -36,6 +36,10 @@ use Chj::chompspace;
 use Chj::xsysopen 'xsysopen_excl';
 use Chj::xopen 'xopen_read';
 
+use Mailmover::detaint;
+$ENV{PATH}= detaint ($ENV{PATH}); # just trust it, it's always under
+                                  # our control, isnt't it?
+
 my $do_send_autoreply=0;
 
 use Mailmover::Lib;
