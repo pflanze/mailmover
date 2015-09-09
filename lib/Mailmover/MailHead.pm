@@ -139,7 +139,7 @@ sub headers {
     } @{ $$self[HeaderSHash]{lc $key} }
 }
 
-sub decodedheader {
+sub decoded_header {
     my $self=shift;
     my ($key,$as_charset)=@_;
     if (defined(my $h=$$self[HeadersHash]{lc($key)})) {
@@ -324,17 +324,17 @@ sub lookslike_autoreply { # cj 10.10.04; sollte 1. wohl eben auch nicht in basis
     my $self=shift;
     # schau nur inhalt an, denn bulk header wurde schon angekuckt.
     # obwohl: scheint dass precedence junk nur bei autoreplies (und ev spam??) angewendet wird, list mails haben bulk oder list.
-    if (my $subject= $self->decodedheader("subject")) {
+    if (my $subject= $self->decoded_header("subject")) {
 	return 1 if $subject=~ /Your E-Mail Message will not be read/i;
 	return 1 if $subject=~ /Office closed/i;
 	return 1 if $subject=~ /Auto.?Reply/i;
 	return 1 if $subject=~ /abwesenheitsnotiz/i;
     }
-    if (my $xmailer= $self->decodedheader("X-Mailer")) {
+    if (my $xmailer= $self->decoded_header("X-Mailer")) {
 	return 1 if $xmailer=~ /vacation/i;
 	return 1 if $xmailer=~ /Autoresp/i;
     }
-    if (my $autosubmitted= $self->decodedheader("Auto-Submitted")) {
+    if (my $autosubmitted= $self->decoded_header("Auto-Submitted")) {
 	#return 1 if $autosubmitted=~ /auto/i; # auto-replied
 	return 1 if $autosubmitted;
     }
