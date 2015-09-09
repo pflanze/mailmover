@@ -52,7 +52,7 @@ sub new_from_fh {
 		    push @headers,$_;
 		    # Always keep the *last* header with same name in %header.
 		    # This way, multi-line build up is still correct.
-		    # Have to check in (with?) ->header() method if multiple.
+		    # Have to check in (with?) ->maybe_header() method if multiple.
 		    push @{ $headers{$lastheaderkey} }, [$#headers,$1,$2];
 		    $header{$lastheaderkey}=[$#headers,$1,$2];
 		} elsif (/^\s+(.*)/) {  #(naja, ist das alles so wirklich korrekt?)
@@ -96,13 +96,12 @@ sub new_from_path {
 }
 
 
-# XX rename to maybe_header
-sub header {
+sub maybe_header {
     my $self=shift;
     my ($key)=@_;
     if (defined(my $h=$$self[HeadersHash]{lc($key)})) {
 	if (@{ $$self[HeaderSHash]{lc $key} } > 1) {
-	    warn "header method called where multiple headers of key '$key' exists";
+	    warn "maybe_header method called where multiple headers of key '$key' exists";
 	    return undef
 	}
 	# Don't return header values with space at the end, since
@@ -169,7 +168,7 @@ sub mailinglist_id {
     my $self=shift;
     my ($value,$id);
   SEARCH:{
-	if ($value= $self->header("x-mailing-list-name")) {	# cj 15.10.04 damit perl6-all aufgeteilt wird.
+	if ($value= $self->maybe_header("x-mailing-list-name")) {	# cj 15.10.04 damit perl6-all aufgeteilt wird.
 	    if ($value=~ /<([^<>]{3,})>/) {##ps da gibts doch pick_out_of_anglebrackets?
 		$id=$1;
 		last SEARCH;
@@ -180,7 +179,7 @@ sub mailinglist_id {
 	    }
 	}
 	# prioritize list-post over list-id since it contains the @ char?
-	if ($value= $self->header("List-Post")) {
+	if ($value= $self->maybe_header("List-Post")) {
 	    if ($value=~ /<([^<>]{3,})>/) { # just in case
 		$id=$1;# hier ist dann bei ssh list noch mailto: dabei
 		last SEARCH;
@@ -189,10 +188,10 @@ sub mailinglist_id {
 		$id=$value;
 		last SEARCH;
 	    } else {
-		warn "(almost-)empty List-Post header '$value'";
+		warn "(almost-)empty List-Post maybe_header '$value'";
 	    }
 	}
-	if ($value= $self->header("List-Id")) {
+	if ($value= $self->maybe_header("List-Id")) {
 	    if ($value=~ /<([^<>]{3,})>/) {
 		$id=$1;
 		last SEARCH;
@@ -200,7 +199,7 @@ sub mailinglist_id {
 		# warn "invalid list-id format '$value'"; ct: membershipreminders kommen hierhin
 	    }
 	} #els
-	if ($value= $self->header("x-mailing-list")) {
+	if ($value= $self->maybe_header("x-mailing-list")) {
 	    if ($value=~ /<([^<>]{3,})>/) {
 		$id=$1;
 		last SEARCH;
@@ -216,7 +215,7 @@ sub mailinglist_id {
 	    }
 	}
 	# 'Mailing-List: contact qmail-help@list.cr.yp.to; run by ezmlm'
-	if ($value= $self->header("Mailing-List")) {
+	if ($value= $self->maybe_header("Mailing-List")) {
 	    if ($value=~ /<([^<>]{3,})>/) {
 		warn "even if Qmail (yet another ezmlm based, right??) mailing list didn't use <..> format, this list does ('$value')";
 		$id=$1;
@@ -228,13 +227,13 @@ sub mailinglist_id {
 		warn "invalid x-mailing-list format '$value'";
 	    }
 	}
-	if (my $precedence= $self->header("precedence")) {
+	if (my $precedence= $self->maybe_header("precedence")) {
 	    $precedence= lc($precedence);
 	    $precedence=~ s/^\s+//s;
 	    $precedence=~ s/\s+\z//s;
 	    if (exists $known_list_precedences{$precedence}) {
 	      RESENT:{
-		    if ($value= $self->header("Resent-From")) {
+		    if ($value= $self->maybe_header("Resent-From")) {
 			#warn "entered Resent-From check";
 			if ($value=~ /<([^<>]{3,})>/) { # just in case
 			    #warn "note: even if debian mailinglists do not put resent-from into <>, this mail did it ('$value')"; -> cj14.12.: die neuen Debian BTS Mails tun dies.
@@ -249,16 +248,16 @@ sub mailinglist_id {
 			    last RESENT;
 			}
 			# cj 12.12.04: weil neuerdings eine email reinkam mit Resent-From: Hideki Yamane <henrich@samba.gr.jp> (== From) vom Debian BTS, und X-Loop: mysql@packages.qa.debian.org (vorsicht mehrere X-Loop headers sind in andern mails möglich), das noch prüfen:
-			my $p_from= chompspace MailUtil::oerr_pick_out_of_anglebrackets $self->header("from");
+			my $p_from= chompspace MailUtil::oerr_pick_out_of_anglebrackets $self->maybe_header("from");
 			my $p_id= chompspace MailUtil::oerr_pick_out_of_anglebrackets $id; ##sollte zwar ja eben nicht mehr nötig sein, aber warum oben eigener müll gemacht?.
 			if (defined($p_from)
 			    and
 			    lc($p_from) eq lc($p_id)) {
 			    # need alternative value.
-			    #if (my @xloop= $self->header   aber das kann ich gar nicht, mehrere abfragen so. mann. schlecht, mal todo besseren head parser machen. auf wantarray schauen um zu sehen ob undef oder multiple geben.
-			    #if (my $xloop= $self->header("X-Loop")) { hm dumm ist dass bereits in meinem fall tatsächlich mehrere drin sind.
+			    #if (my @xloop= $self->maybe_header   aber das kann ich gar nicht, mehrere abfragen so. mann. schlecht, mal todo besseren head parser machen. auf wantarray schauen um zu sehen ob undef oder multiple geben.
+			    #if (my $xloop= $self->maybe_header("X-Loop")) { hm dumm ist dass bereits in meinem fall tatsächlich mehrere drin sind.
 			    #} else {
-			    #	warn "kein X-Loop header (oder mehrere) drin";
+			    #	warn "kein X-Loop maybe_header (oder mehrere) drin";
 			    #}
 			    my @xloop= $self->headers("X-Loop");
 			    my $xloop= do {
@@ -275,10 +274,10 @@ sub mailinglist_id {
 			    if (defined $xloop) {
 				$id= chompspace MailUtil::oerr_pick_out_of_anglebrackets $xloop;
 				##Frage: warum hatte compiler nöd reklamiert über undef methode? aber runtime?
-				#warn "ok X-Loop header drin: id isch nun $id";
+				#warn "ok X-Loop maybe_header drin: id isch nun $id";
 				last SEARCH;
 			    } else {
-				#warn "kein X-Loop header drin";
+				#warn "kein X-Loop maybe_header drin";
 			    }
 			} else {
 			    last SEARCH;##frage gibt das ein warning wegen leave mehrere schritte? nah doch nid
@@ -290,7 +289,7 @@ sub mailinglist_id {
 		    # ----> NACH OBEN
 		}#/RESENT
 		# lugs: (mail alt dings)
-		if ($value= $self->header("sender")
+		if ($value= $self->maybe_header("sender")
 		    and $value=~ /^owner-(.*)/si) {
 		    $id=$1;
 		    last SEARCH;

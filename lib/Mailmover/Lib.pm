@@ -185,14 +185,14 @@ sub analyze_file($;$$) {
 	}
     }
     if (!$folderpath) {
-	if (my $to= $head->header("to")) {
+	if (my $to= $head->maybe_header("to")) {
 	    if ($to=~ /^(postmaster\@[^\@;:,\s]+[a-z])/) {
 		$folderpath= MovePath $1;
 	    }
 	}
     }
     if (!$folderpath) {
-	if ($head->header('x-facebook')) {
+	if ($head->maybe_header('x-facebook')) {
 	    # XX how many times to get that header? Also, why never
 	    # decoded above?
 	    if (my $subject= $head->decoded_header("subject")) {
@@ -308,7 +308,7 @@ sub is_reply {
       $ownmsgidtable->exists($in_reply_to)
 	or
 	  sub {
-	      for (pick_out_of_anglebrackets($mail->header("References"))) {
+	      for (pick_out_of_anglebrackets($mail->maybe_header("References"))) {
 		  return 1 if $ownmsgidtable->exists($_);
 	      }
 	      0;

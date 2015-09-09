@@ -384,8 +384,8 @@ sub conditional_move_file($ $ ) {
 		# can we be sure that hier kein email hin kommt das bulk header hat, zB selber ne autoreply isch?.
 		# nein: wenn es keine der %known_list_precedences ist (well wär mir egal), oder resent-from fehlt und nicht sender owner-xyz dings isch, dann würde es nid gefiltert werden obwohl es precedence header hat. also hier explizit checken:
 		if (do{# bulkiges email
-		    #if (my $precedence= chompspace($mail->header("precedence"))) {##ps erscht hier mach ich chompspace, in mailmoverlib nicht!!  EHR das mach ich bei headers EH.  hatt ich das nich schon als unschön taxiert.   ACH und dann auch noch undef Fall.
-		    if (my $precedence= $mail->header("precedence")) {
+		    #if (my $precedence= chompspace($mail->maybe_header("precedence"))) {##ps erscht hier mach ich chompspace, in mailmoverlib nicht!!  EHR das mach ich bei headers EH.  hatt ich das nich schon als unschön taxiert.   ACH und dann auch noch undef Fall.
+		    if (my $precedence= $mail->maybe_header("precedence")) {
 			#if (exists $MailHead::known_list_precedences{$precedence}) { eh isch dort lexical.
 			if (lc($precedence) eq 'bulk'
 			    or
