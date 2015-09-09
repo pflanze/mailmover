@@ -19,7 +19,7 @@ package Mailmover::MailUtil;
 @ISA="Exporter"; require Exporter;
 @EXPORT=qw();
 @EXPORT_OK=qw(pick_out_of_anglebrackets
-       	      oerr_pick_out_of_anglebrackets);
+       	      pick_out_of_anglebrackets_or_original);
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
 use strict; use warnings FATAL => 'uninitialized';
@@ -53,7 +53,7 @@ sub pick_out_of_anglebrackets {
     }
 }
 
-sub oerr_pick_out_of_anglebrackets {
+sub pick_out_of_anglebrackets_or_original {
     my ($str)=@_;
     if (wantarray) {
 	my @res= pick_out_of_anglebrackets $str;

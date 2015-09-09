@@ -22,7 +22,7 @@ use strict; use warnings FATAL => 'uninitialized';
 use MIME::Words 'decode_mimewords';
 use Chj::Encode::Permissive 'encode_permissive';
 use Chj::chompspace;
-use Mailmover::MailUtil qw(oerr_pick_out_of_anglebrackets);
+use Mailmover::MailUtil qw(pick_out_of_anglebrackets_or_original);
 
 use Class::Array -fields=>(
 			   # ps warum's Inmail class gibt in elcms: weil es inder db es ja auch so gross will wie es eben ist i.e. ram grösse.  (chunking?)
@@ -248,8 +248,8 @@ sub maybe_mailinglist_id {
 			    last RESENT;
 			}
 			# cj 12.12.04: weil neuerdings eine email reinkam mit Resent-From: Hideki Yamane <henrich@samba.gr.jp> (== From) vom Debian BTS, und X-Loop: mysql@packages.qa.debian.org (vorsicht mehrere X-Loop headers sind in andern mails möglich), das noch prüfen:
-			my $p_from= chompspace oerr_pick_out_of_anglebrackets $self->maybe_header("from");
-			my $p_id= chompspace oerr_pick_out_of_anglebrackets $id; ##sollte zwar ja eben nicht mehr nötig sein, aber warum oben eigener müll gemacht?.
+			my $p_from= chompspace pick_out_of_anglebrackets_or_original $self->maybe_header("from");
+			my $p_id= chompspace pick_out_of_anglebrackets_or_original $id; ##sollte zwar ja eben nicht mehr nötig sein, aber warum oben eigener müll gemacht?.
 			if (defined($p_from)
 			    and
 			    lc($p_from) eq lc($p_id)) {
@@ -272,7 +272,7 @@ sub maybe_mailinglist_id {
 				$xloop[-1]
 			    };
 			    if (defined $xloop) {
-				$id= chompspace oerr_pick_out_of_anglebrackets $xloop;
+				$id= chompspace pick_out_of_anglebrackets_or_original $xloop;
 				##Frage: warum hatte compiler nöd reklamiert über undef methode? aber runtime?
 				#warn "ok X-Loop maybe_header drin: id isch nun $id";
 				last SEARCH;
