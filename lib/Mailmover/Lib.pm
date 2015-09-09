@@ -81,7 +81,7 @@ sub analyze_file($;$$) {
 	pick_out_of_anglebrackets($head->maybe_first_header("message-id"))
     };
 
-    my $spamscore= $head->spamscore;
+    my $maybe_spamscore= $head->maybe_spamscore;
 
     if (!$folderpath) {
 	if (my $subject= $head->maybe_decoded_header("subject")) {
@@ -210,7 +210,7 @@ sub analyze_file($;$$) {
     }
 
     if (!$folderpath) { # wie oft prüfe ich den noch hehe ?..
-	if (!$is_ham and defined($spamscore) and $spamscore > 0) {
+	if (!$is_ham and defined($maybe_spamscore) and $maybe_spamscore > 0) {
 	    $folderpath = MovePath "möglicher spam";
 	}
     }
