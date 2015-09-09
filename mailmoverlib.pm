@@ -24,6 +24,55 @@ our $opt_leaveinbox;
 
 my $BUFSIZE=50000;
 
+{
+    package MovePath;
+    use Chj::Path::Truncator::MD5;
+    use FP::Predicates "is_array";
+    use FP::Array "array_append";
+
+    use FP::Struct [[*is_array, "items"]];
+
+    sub untruncated_string {
+	@_==1 or die "wrong number of arguments";
+	my $s=shift;
+	join "/",
+	    map {
+		local $_= /^\./ ? "dot.$_" : $_;
+		s{/}{--}sg
+	    } @{$s->items};
+    }
+
+    sub string {
+	@_==2 or die "wrong number of arguments";
+	my ($s, $targetbase)=@_;
+	my $truncator= Chj::Path::Truncator::MD5->new($targetbase,3);
+	# XX: not totally safe as it might truncate away a folder
+	# boundary if parent folders are long!
+	$truncator->trunc($s->untruncated_string)
+    }
+
+    sub string_split {
+	@_==2 or die "wrong number of arguments";
+	my ($s, $targetbase)=@_;
+	# sounds stupid first to stringify then split again, but,
+	# proper escaping is being done this way (only?) *and
+	# especially truncation*.
+	split /\//, $s->string ($targetbase)
+    }
+
+    sub append {
+	@_==2 or die "wrong number of arguments";
+	my ($a,$b)=@_;
+	UNIVERSAL::isa($b, "MovePath") or die "wrong type of $b";
+	$a->items_set(array_append ($a->items, $b->items))
+    }
+
+    _END_
+}
+sub MovePath {
+    MovePath->new([@_])
+}
+
 
 {
     package MailUtil;
@@ -410,13 +459,13 @@ sub analyze_file($;$$) {
     my $f= xopen_read $filepath;
     my $head= MailHead->new_from_fh($f);
 
-    my ($foldername,$type,$important);
+    my ($folderpath,$type,$important);
     $type="unbekannt";
 
     my $is_spam= $is_ham ? 0 : $head->is_spam;
     if ($is_spam) {
 	warn "'$filename' is spam\n" if $DEBUG;
-	$foldername="spam";
+	$folderpath= MovePath "spam";
     } elsif (! defined $is_spam) {
 	warn "'$filename' is_spam: not scanned\n" if $verbose;
     }
@@ -429,19 +478,19 @@ sub analyze_file($;$$) {
 
     my $spamscore= $head->spamscore;
 
-    if (!$foldername) {
+    if (!$folderpath) {
 	if (my $subject= $head->decodedheader("subject")) {
 	    # mailinglist reminders
 	    if ($subject=~ /^\S+\s+mailing list memberships reminder\s*$/
 		and
 		$from=~ /^mailman-owner\@/
 	       ) {
-		$foldername= "mailinglistmembershipreminders";#$type="list";oder toplevel
+		$folderpath= MovePath "mailinglistmembershipreminders";#$type="list";oder toplevel
 	    }
 	}
     }
 
-    if (!$foldername) {
+    if (!$folderpath) {
 	my $list= $head->mailinglist_id;
 	if (defined $list) {
 	    warn "'$filename': mailinglist $list\n" if $DEBUG;
@@ -456,36 +505,35 @@ sub analyze_file($;$$) {
 	    if ($list=~ /debian-security-announce/i) {
 		$important=1;
 	    }
-	    $foldername=$list; $type="list";
-	    $foldername=~ s{/}{--}sg; # well, wird nun eh unten nochmals gemacht.
+	    $folderpath= MovePath $list; $type="list";
 	}
     }
 
 
     # noch gemäss subject einiges filtern:
-    if (!$foldername) {
+    if (!$folderpath) {
 	if (my $subject= $head->decodedheader("subject")) {
 	    # system mails
 	    if ($subject=~ /^([a-zA-Z][\w-]+)\s+\d+.*\d system check\s*\z/) {
-		$foldername="systemcheck-$1";$type="system";
+		$folderpath= MovePath "systemcheck-$1";$type="system";
 		##ps.punkte dürfen in maildir foldernamen dann nicht vorkommen. weils separatoren sind. quoting möglich? in meiner library dann.
 	    } elsif ($subject eq 'DEBUG') {
-		$foldername= "DEBUG";$type="system";
+		$folderpath= MovePath "DEBUG";$type="system";
 	    } else {
 		my $tmp; # instead of relying on $1 too long
 		if ($subject=~ /^\[LifeCMS\]/
 		    and ( $from eq 'alias@ethlife.ethz.ch'
 			  or $from eq 'newsletter@ethlife.ethz.ch') ) {
-		    $foldername= $subject;$type="system";#gefährlich? jaaaa war es!!! jetzt hab ich unten geflickt.
+		    $folderpath= MovePath $subject;$type="system";#gefährlich? jaaaa war es!!! jetzt hab ich unten geflickt.
 		} elsif ($subject=~ /^Cron/ and $from=~ /Cron Daemon/) {
-		    $foldername= $subject;$type="system";
+		    $folderpath= MovePath $subject;$type="system";
 # 		} elsif ($subject=~ /out of office autoreply/i
 # 			 #or
 # 			) {
-# 		    $foldername= "AUTOREPLY";
+# 		    $folderpath= MovePath "AUTOREPLY";
 		} elsif ($subject=~ /^Delivery Status Notification/
 			 and $from=~ /^postmaster/) {
-		    $foldername= "BOUNCE";
+		    $folderpath= MovePath "BOUNCE";
 		} elsif (#$subject=~ /failure notice/ and
 			 ($from=~ /\bMAILER[_-]DAEMON\@/i
 			  or
@@ -496,10 +544,10 @@ sub analyze_file($;$$) {
 			 and do {
 			     $f->xread($content,$BUFSIZE);
 			     if ($content=~ /From: ETH Life/) {
-				 $foldername= "newslettermanuell..$from";$type="system";
+				 $folderpath= MovePath "newslettermanuell..$from";$type="system";
 				 1
 			     } elsif ($content=~ /Message-[Ii]d:[^\n]+lifecms/) {
-				 $foldername= "lifecms..$from";$type="system";
+				 $folderpath= MovePath "lifecms..$from";$type="system";
 				 1
 			     } else {
 				 0
@@ -507,13 +555,13 @@ sub analyze_file($;$$) {
 			 }) {
 		    # filtered. else go on in other elsifs
 		} elsif ($from=~ /GMX Magazin <mailings\@gmx/) {
-		    $foldername= "GMX Magazin"; $type="list";
+		    $folderpath= MovePath "GMX Magazin"; $type="list";
 		} elsif ($from=~ /GMX Spamschutz.* <mailings\@gmx/) {
-		    $foldername= "GMX Spamschutz"; $type="list";
+		    $folderpath= MovePath "GMX Spamschutz"; $type="list";
 		}
 		# cj 3.12.04 ebay:
 		elsif ($from=~ /\Q<newsletter_ch\@ebay.com>\E/) {
-		    $foldername="ebay-newsletter";# $type="list"; oder "unbekannt" lassen? frage an ct: welche typen gibt es und wie werden sie sonst gehandhabt, resp. ändere es hier einfach selber ab, ich benutze type derzeit eh nicht.
+		    $folderpath= MovePath "ebay-newsletter";# $type="list"; oder "unbekannt" lassen? frage an ct: welche typen gibt es und wie werden sie sonst gehandhabt, resp. ändere es hier einfach selber ab, ich benutze type derzeit eh nicht.
 		}
 		# sourceforge:
 		elsif (do {
@@ -525,31 +573,30 @@ sub analyze_file($;$$) {
 		    )
 		}) {
 		    #warn "yes, sourceforge";
-		    $foldername= $tmp;
+		    $folderpath= MovePath $tmp;
 		    $type= "sourceforge";
 		}
 	    }
 	}
     }
-    if (!$foldername) {
+    if (!$folderpath) {
 	if (my $to= $head->header("to")) {
 	    if ($to=~ /^(postmaster\@[^\@;:,\s]+[a-z])/) {
-		$foldername= $1;# "TO DO: gefährlich!!" ne wohl nüme. right? oder was gemeint: dass mails die an "mich" gehen sollten weggemoved werden? doch todo? jup isch neuere notiz!
+		$folderpath= MovePath $1;
 	    }
 	}
     }
-    if (!$foldername) {
+    if (!$folderpath) {
 	if ($head->header('x-facebook')) {
 	    # XX how many times to get that header? Also, why never
 	    # decoded above?
 	    if (my $subject= $head->decodedheader("subject")) {
 		if ($subject=~ /\bTrending\b/i) {
-		    $foldername= "facebook/trending"
-		      # XX could I use "facebook/trending" ? (Would I want to?)
+		    $folderpath= MovePath "facebook", "trending"
 		} elsif ($subject=~ /\bdo you know /i) {
-		    $foldername= "facebook/doyouknow"
+		    $folderpath= MovePath "facebook", "doyouknow"
 		} elsif ($subject=~ /\bYou have more friends .*than you think/i) {
-		    $foldername= "facebook/morethanyouthink"
+		    $folderpath= MovePath "facebook", "morethanyouthink"
 		} else {
 		    #use Chj::repl;repl;
 		}
@@ -557,32 +604,30 @@ sub analyze_file($;$$) {
 	}
     }
 
-    if (!$foldername) { # wie oft prüfe ich den noch hehe ?..
+    if (!$folderpath) { # wie oft prüfe ich den noch hehe ?..
 	if (!$is_ham and defined($spamscore) and $spamscore > 0) {
-	    $foldername = "möglicher spam";
+	    $folderpath = MovePath "möglicher spam";
 	}
     }
 
     # nichts matchende sonstwohin:
-    if (!$foldername) {
+    if (!$folderpath) {
 	my $s= xstat $filepath;
 	if ($s->size > 1000000) { #cj: ps. sollte size messung ausserhalb geschehen? weil, wenn per symlink redirected, ja doch wieder die frage ob dann-doch-nicht in die inbox.
-	    $foldername="inbox-big";$type="inbox";$important=1;
+	    $folderpath= MovePath "inbox-big";$type="inbox";$important=1;
 	} else {
-	    $foldername="inbox" unless $opt_leaveinbox;$type="inbox";
+	    $folderpath= MovePath "inbox" unless $opt_leaveinbox;$type="inbox";
 	}
 
     } else {
-	if ($foldername eq "inbox" or $foldername eq "inbox-big") {
-	    die "mail '$filename' somehow managed to get foldername '$foldername'";
+	my $str= $folderpath->untruncated_string;
+	if ($str eq "inbox" or $str eq "inbox-big") {
+	    die "mail '$filename' somehow managed to get foldername '$str'";
 	    #sollte nicht passieren vom Ablauf her
 	}
     }
-    if ($foldername) {
-	$foldername=~ s{/}{--}sg;#!wichtig!.. nochmals.
-    }
     undef $messageid;
-    ($head,$foldername,$type,$important);
+    ($head,$folderpath,$type,$important);
 }
 
 sub _einstampfen { # testcase siehe lombi:~/perldevelopment/test/mailmoverlib/t1

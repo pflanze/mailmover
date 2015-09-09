@@ -51,7 +51,7 @@ for (my $i=0; $i<=$#ARGV; $i++) {
 
 for my $path (@ARGV) {
     print "-- $path:\n";
-    my ($mail,$foldername,$type,$important)= analyze_file $args[0] if @args;
+    my ($mail,$folderpath,$type,$important)= analyze_file $args[0] if @args;
     repl;
 }
 
