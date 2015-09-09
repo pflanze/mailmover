@@ -1,0 +1,89 @@
+Return-Path: <tonsofcharactersreallytonstonstonstonsandevenmoreandtons@emea.e.paypal.com>
+Delivered-To: nonexist@leafpair.com
+Received: (qmail 2747 invoked by uid 108); 10 Aug 2015 10:09:53 +0200
+X-Spam-Status: No, score=-8.8 required=5.0 tests=DKIM_SIGNED,DKIM_VALID,
+		DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,HTML_MESSAGE,RCVD_IN_MSPIKE_H3,
+		RCVD_IN_MSPIKE_WL,RP_MATCHES_RCVD,SPF_HELO_PASS,SPF_PASS,URIBL_BLOCKED,
+		USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.1
+X-Spam-Checker-Version: SpamAssassin 3.4.1 (2015-04-28) on servi
+X-Spam-Level: 
+X-HELO: outbound.emea.e.paypal.com
+Received: from outbound.emea.e.paypal.com (HELO outbound.emea.e.paypal.com) (96.47.30.228)
+ by a.christianjaeger.ch (qpsmtpd/0.94) with ESMTP; Mon, 10 Aug 2015 10:09:51 +0200
+Authentication-Results: a.christianjaeger.ch; auth=none
+Return-Path: <tonsofcharactersreallytonstonstonstonsandevenmoreandtons@emea.e.paypal.com>
+DKIM-Signature: v=1; a=rsa-sha1; d=e.paypal.co.uk; s=ED-DKIM-V3; c=relaxed/relaxed;
+	q=dns/txt; i=@e.paypal.co.uk; t=1439194188;
+	h=From;
+	bh=IktwofW5wLp76hHlgUyVxQ14Dt8=;
+	b=EF6MM8tmcOHT/5J2efKQgKZ37nglV73hxsW9RwW3C6Y7CAzHDN9XztMCiDPl+RCU
+	5nEFO8RQ0k+8UfvcxxF6LMIt+cZlc67lMF1UFcfKdKo7/F4aIuIIJb2R33stE4eP
+	t+53L6XfROqkPyg0KqSUOckbe5wf+Pgh4/5yGn3SgxY=;
+Received: from [127.0.0.1] ([127.0.0.1:60333])
+	by bm1-16.bo3.e-dialog.com (envelope-from <tonsofcharactersreallytonstonstonstonsandevenmoreandtonso@emea.e.paypal.com>)
+	(ecelerity 2.2.2.45 r(34222M)) with ECSTREAM
+	id FE/27-24822-C4C58C55; Mon, 10 Aug 2015 04:09:48 -0400
+Date: Mon, 10 Aug 2015 04:09:48 -0400
+Content-Type: multipart/alternative; boundary="-_-_-_-_-_1234567890"
+Content-Transfer-Encoding: binary
+MIME-Version: 1.0
+From: "PayPal" <paypal@e.paypal.co.uk>
+Reply-To: "PayPal" <noreply@e.paypal.co.uk>
+To: nonexist@leafpair.com
+Subject: Just landed, your business
+ report for the past month
+Message-Id: <tonsofcharactersreallytonstonstonstonsandevenmoreandtons@e-dialog.com>
+X-Mail-From: tonsofcharactersreallytonstonstonstonsandevenmoreandtons@emea.e.paypal.com
+X-Match: emea.e.paypal.com
+X-RCPT-To: nonexist@leafpair.com
+X-Mailer: EDMAIL R6.00.02
+
+This is a multi-part message in MIME format...
+
+---_-_-_-_-_1234567890
+Content-Type: text/plain; charset=UTF-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+PayPal
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+We have tried to send you this email as HTML (pictures and words) but it wa=
+sn=E2=80=99t possible.=20
+In order for you to see what we had hoped to show you please click here to =
+view online in your browser:
+
+Yours sincerely,
+
+PayPal=20
+---------------------------------------------------------------------------=
+--------------
+
+Copyright =C2=A9 1999-2015 PayPal. All rights reserved.  PayPal (Europe) S.=
+=C3=A0 r.l. et Cie, S.C.A., Soci=C3=A9t=C3=A9 en Commandite par Actions. Re=
+gistered office: 22-24 Boulevard Royal, L-2449, Luxembourg, R.C.S. Luxembou=
+rg B 118 349.
+
+---_-_-_-_-_1234567890
+Content-Type: text/html; charset=UTF-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
+
+
+<!-- If you see this message, please enable HTML e-mail -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+ ... cleansed....
+/* ------ FOOTER CONTROLS ------ */
+*[class=horizontal_rule] {
+	width: 480px !important;
+	height: 2px !important;
+}
+ ... cleansed....
+Copyright &copy; 1999-2015 PayPal. All rights reserved.  PayPal (Europe) S.&#224; r.l. et Cie, S.C.A., Soci&#233;t&#233; en Commandite par Actions. Registered office: 22-24 Boulevard Royal, L-2449, Luxembourg, R.C.S. Luxembourg B 118 349.
+
+---_-_-_-_-_1234567890--
+

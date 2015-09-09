@@ -84,6 +84,18 @@ sub new_from_fh {
     $self
 }
 
+# (this is not a pure function; the returned object might still
+# be. Again, how to handle exactly, re `is_pure`?)
+sub new_from_path {
+    my ($class,$path)=@_;
+    require Chj::xopen;
+    my $fh= Chj::xopen::xopen_read($path);
+    my $self= $class->new_from_fh($fh);
+    $fh->xclose;
+    $self
+}
+
+
 # XX rename to maybe_header
 sub header {
     my $self=shift;

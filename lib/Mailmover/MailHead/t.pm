@@ -18,15 +18,26 @@ Mailmover::MailHead::t
 package Mailmover::MailHead::t;
 
 use strict; use warnings FATAL => 'uninitialized';
+use Function::Parameters qw(:strict);
 
 use Mailmover::MailHead;
 use Chj::TEST;
-use Chj::xopen;
+use FP::Array ":all";
+use FP::Ops qw(cut_method the_method);
+use FP::Combinators qw(:all);
 
-my $in= xopen_read ('testcorpus/1441781601.28365.servi:2,S');
+my $heads=
+  array_map (compose(cut_method ("Mailmover::MailHead", "new_from_path"),
+		     fun ($file) { "testcorpus/$file" }),
+	     ['1441781601.28365.servi:2,S',
+	      '1439194193.2749.servi:2,S']);
 
-my $head= Mailmover::MailHead->new_from_fh($in);
+TEST { array_map the_method ("decoded_header","subject"), $heads }
+  [
+   'Sch?tzen Sie Ihre Amazon.de Konto', # this is an odd mail, probably wrong?
+   "Just landed, your business\n\treport for the past month" # hm, really? 'decoded'?
+  ];
 
-use Chj::repl;repl;
+#use Chj::repl;repl;
 
 1
