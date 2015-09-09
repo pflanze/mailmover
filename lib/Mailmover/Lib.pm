@@ -298,10 +298,12 @@ sub is_reply {
     my ($mail) = @_;
     if (my $subj= _eingestampftessubject($mail)) {
 	my $ownsubjectstable= Chj::FileStore::PIndex->new($ownsubjects_base);
-	return 1 if $ownsubjectstable->exists($subj);
+	return 1
+	  if $ownsubjectstable->exists($subj);
 	# ev. todo: hier auch noch mailingliste berücksichtigen? also subject.liste-kombination soll matchen?.
     }
-    my $in_reply_to = pick_out_of_anglebrackets($mail->maybe_first_header("In-Reply-To")); # many (broken?) clients actually do seem to send multiple such headers
+    my $in_reply_to = pick_out_of_anglebrackets($mail->maybe_first_header("In-Reply-To"));
+    # many (broken?) clients actually do seem to send multiple such headers
     return unless defined $in_reply_to;
     my $ownmsgidtable= Chj::FileStore::PIndex->new($ownmsgid_base);
     return
@@ -309,7 +311,8 @@ sub is_reply {
 	or
 	  sub {
 	      for (pick_out_of_anglebrackets($mail->maybe_header("References"))) {
-		  return 1 if $ownmsgidtable->exists($_);
+		  return 1
+		    if $ownmsgidtable->exists($_);
 	      }
 	      0;
 	  }->();
