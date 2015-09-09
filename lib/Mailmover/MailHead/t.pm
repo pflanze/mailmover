@@ -32,7 +32,7 @@ my $heads=
 	     ['1441781601.28365.servi:2,S',
 	      '1439194193.2749.servi:2,S']);
 
-TEST { array_map the_method ("decoded_header","subject"), $heads }
+TEST { array_map the_method ("maybe_decoded_header","subject"), $heads }
   [
    'Sch?tzen Sie Ihre Amazon.de Konto', # this is an odd mail, probably wrong?
    "Just landed, your business\n\treport for the past month" # hm, really? 'decoded'?

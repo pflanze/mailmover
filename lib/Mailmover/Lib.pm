@@ -84,7 +84,7 @@ sub analyze_file($;$$) {
     my $spamscore= $head->spamscore;
 
     if (!$folderpath) {
-	if (my $subject= $head->decoded_header("subject")) {
+	if (my $subject= $head->maybe_decoded_header("subject")) {
 	    # mailinglist reminders
 	    if ($subject=~ /^\S+\s+mailing list memberships reminder\s*$/
 		and
@@ -117,7 +117,7 @@ sub analyze_file($;$$) {
 
     # noch gemäss subject einiges filtern:
     if (!$folderpath) {
-	if (my $subject= $head->decoded_header("subject")) {
+	if (my $subject= $head->maybe_decoded_header("subject")) {
 	    # system mails
 	    if ($subject=~ /^([a-zA-Z][\w-]+)\s+\d+.*\d system check\s*\z/) {
 		$folderpath= MovePath "systemcheck-$1";$type="system";
@@ -195,7 +195,7 @@ sub analyze_file($;$$) {
 	if ($head->maybe_header('x-facebook')) {
 	    # XX how many times to get that header? Also, why never
 	    # decoded above?
-	    if (my $subject= $head->decoded_header("subject")) {
+	    if (my $subject= $head->maybe_decoded_header("subject")) {
 		if ($subject=~ /\bTrending\b/i) {
 		    $folderpath= MovePath "facebook", "trending"
 		} elsif ($subject=~ /\bdo you know /i) {
@@ -291,7 +291,7 @@ sub _einstampfen { # testcase siehe lombi:~/perldevelopment/test/mailmoverlib/t1
 
 sub _eingestampftessubject {
     my ($mail)=@_;
-    _einstampfen($mail->decoded_header("subject","ascii"));
+    _einstampfen($mail->maybe_decoded_header("subject","ascii"));
 }
 
 sub is_reply {

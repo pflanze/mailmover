@@ -231,9 +231,9 @@ sub conditional_move_file($ $ ) {
     WithRepl_eval {
 	my ($mail,$folderpath,$type,$important)=
 	  analyze_file ($filepath, undef, $opt_is_ham);
-	$quotedsubject= Lazy { singlequote($mail->decoded_header("subject"),
+	$quotedsubject= Lazy { singlequote($mail->maybe_decoded_header("subject"),
 					   "(kein subject)") };
-	$from=$mail->decoded_header("From");
+	$from=$mail->maybe_decoded_header("From");
 	$quotedfrom= Lazy { singlequote $from };
 	$quotedfolderpath= Lazy { singlequote ($folderpath->string ($targetbase)) };
 
@@ -412,11 +412,11 @@ sub conditional_move_file($ $ ) {
 				undef
 			    }
 			}) {
-			    my $senderaddress= $mail->decoded_header("from");
+			    my $senderaddress= $mail->maybe_decoded_header("from");
 			    # ^- aber  extrahieren und so   hab ich doch auch schon gemacht  für sms dings   ah kann einfach volles Teil schicken  mit der EL::Util::Sendmail library 'offenbar'.
 			    autoreply::send_if_not_already($senderaddress,
 							   'christian.jaeger@ethlife.ethz.ch',
-							   scalar $mail->decoded_header("subject"))
+							   scalar $mail->maybe_decoded_header("subject"))
 				and warn "sent autoreply\n";
 			}
 		    }
