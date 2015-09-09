@@ -44,12 +44,10 @@ use Mailmover::Lib;
 
 use Chj::TransparentNoncachingLazy;
 
-
 # Read config:
-my ($home)= $ENV{HOME}=~ m{^(/home/\w+)/?\z}
-  or die "weird HOME: '$ENV{HOME}'";
-
 use Mailmover::FirstFoundPath;
+use Mailmover::safe_HOME;
+my $home= safe_HOME;
 require ( xfirst_found_path("$home/.mailmover_config.pl",
 			    "./.mailmover_config.pl",
 			    "./default_mailmover_config.pl") );

@@ -18,11 +18,12 @@ findfunctionalperl
 
 package findfunctionalperl;
 
+use Mailmover::safe_HOME;
+
 if (eval 'use FP; 1') {
     # all good
 } else {
-    my ($home)= $ENV{HOME}=~ m{^(/home/\w+)/?\z}
-      or die "weird HOME: '$ENV{HOME}'";
+    my $home= safe_HOME;
     my $p= "$home/functional-perl/lib";
     if (-d $p) {
 	unshift @INC, $p
