@@ -96,7 +96,7 @@ sub analyze_file($;$$) {
     }
 
     if (!$folderpath) {
-	my $list= $head->mailinglist_id;
+	my $list= $head->maybe_mailinglist_id;
 	if (defined $list) {
 	    warn "'$filename': mailinglist $list\n" if $DEBUG;
 	} else {

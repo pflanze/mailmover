@@ -163,7 +163,7 @@ sub maybe_decoded_header {
 
 # does not belong into base package anymore:
 my %known_list_precedences= map {$_=>undef} qw( bulk list );
-sub mailinglist_id {
+sub maybe_mailinglist_id {
     my $self=shift;
     my ($value,$id);
   SEARCH:{
@@ -296,7 +296,7 @@ sub mailinglist_id {
 	    }
 	}
 	#warn "not a list mail";
-	return;
+	return undef;
     }
     #warn "listmail: $id\n";
     $id=~ s/^mailto:\s*//si;
