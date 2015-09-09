@@ -15,8 +15,9 @@ lib/findfunctionalperl.pm
 mailmover
 mailmovertest
 meta/ModuleList.pm
+t/local_corpus
+t/local_corpus.sh
 t/require_and_run_tests
-test
 test.pl
 testcorpus/1439194193.2749.servi:2,S
 testcorpus/1441781601.28365.servi:2,S
