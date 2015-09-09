@@ -31,7 +31,7 @@ use Chj::FileStore::PIndex;
 use Chj::oerr;
 use FP::Lazy;
 use Mailmover::MovePath;
-use Mailmover::MailUtil qw(pick_out_of_anglebrackets oerr_pick_out_of_anglebrackets);
+use Mailmover::MailUtil qw(pick_out_of_anglebrackets);
 
 
 our ($DEBUG,$verbose);
