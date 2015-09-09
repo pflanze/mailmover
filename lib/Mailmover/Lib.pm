@@ -16,10 +16,10 @@ Mailmover::Lib
 
 
 package Mailmover::Lib;
-#@ISA="Exporter"; require Exporter;
-#@EXPORT=qw();
-#@EXPORT_OK=qw();
-#%EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
+@ISA="Exporter"; require Exporter;
+@EXPORT=qw(analyze_file);
+@EXPORT_OK=qw();
+%EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
 use strict; use warnings FATAL => 'uninitialized';
 
@@ -32,6 +32,7 @@ use Chj::oerr;
 use FP::Lazy;
 use Mailmover::MovePath;
 use Mailmover::MailUtil qw(pick_out_of_anglebrackets);
+use Mailmover::MailHead;
 
 
 our ($DEBUG,$verbose);
@@ -62,7 +63,7 @@ sub analyze_file($;$$) {
 	$f
     };
     my $f= xopen_read $filepath;
-    my $head= MailHead->new_from_fh($f);
+    my $head= Mailmover::MailHead->new_from_fh($f);
 
     my ($folderpath,$type,$important);
     $type="unbekannt";
