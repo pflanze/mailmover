@@ -75,7 +75,7 @@ sub analyze_file($;$$) {
 	warn "'$filename' is_spam: not scanned\n" if $verbose;
     }
 
-    my $from= $head->header_ignoringidenticalcopies("from");
+    my $from= $head->maybe_header_ignoringidenticalcopies("from");
     my $content;
     my $messageid= lazy {
 	pick_out_of_anglebrackets($head->maybe_first_header("message-id"))

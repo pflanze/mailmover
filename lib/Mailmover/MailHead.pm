@@ -120,7 +120,7 @@ sub maybe_first_header {
     ($s->headers(@_))[0]
 }
 
-sub header_ignoringidenticalcopies {
+sub maybe_header_ignoringidenticalcopies {
     my $s=shift;
     my ($key)=@_;
     if (my @v= $s->headers($key)) {
@@ -129,7 +129,7 @@ sub header_ignoringidenticalcopies {
 	  CHECK: {
 		for (@v) {
 		    if ($_ ne $first) {
-			warn "header_ignoringidenticalcopies('$key'): multiple headers of key with *different* values exist";
+			warn "maybe_header_ignoringidenticalcopies('$key'): multiple headers of key with *different* values exist";
 			last CHECK;
 		    }
 		}
