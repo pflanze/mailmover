@@ -31,24 +31,25 @@ our $raiseerrors=0;
 
 sub pick_out_of_anglebrackets {
     my ($str)=@_;
-    unless (defined $str) {
-	return wantarray ? () : undef;
-    }
-    my @res= $str=~ /<([^>]*)>/g;
-    if (wantarray){
-	@res
-    } elsif (@res>1) {
-	my $msg= "multiple angle brackets found but only one expected";
-	if ($verbose) {
-	    warn $msg
-	}#naja, DBI like doppelwarn behaviour. is this liked?   [todo?]
-	if ($raiseerrors){
-	    croak $msg
+    if (defined $str) {
+	my @res= $str=~ /<([^>]*)>/g;
+	if (wantarray){
+	    @res
+	} elsif (@res>1) {
+	    my $msg= "multiple angle brackets found but only one expected";
+	    if ($verbose) {
+		warn $msg
+	    }#naja, DBI like doppelwarn behaviour. is this liked?   [todo?]
+	    if ($raiseerrors){
+		croak $msg
+	    } else {
+		$res[0]
+	    }
 	} else {
 	    $res[0]
 	}
     } else {
-	$res[0]
+	()
     }
 }
 
