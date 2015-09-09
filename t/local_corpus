@@ -1,0 +1,11 @@
+#!/usr/bin/perl -w
+
+use strict; use warnings FATAL => 'uninitialized';
+
+use Test::More;
+
+is system("t/local_corpus.sh"), 0;
+
+is `( cd Maildir; git status )`=~ /working directory clean/, 1;
+
+done_testing;

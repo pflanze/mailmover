@@ -15,6 +15,7 @@ $ENV{TEST}=1;
 our @t=
   qw(
 	require_and_run_tests
+	local_corpus
    );
 
 runtests(map {"t/$_"} @t);
