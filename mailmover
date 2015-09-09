@@ -1,49 +1,57 @@
 #!/usr/bin/perl -wT
-# ^- risk T  starting from Sun, 24 Oct 2004 22:50:45 +0200
+
+#
+# Copyright 2007-2015 by Christian Jaeger, ch at christianjaeger ch
+# Published under the same terms as perl itself
+#
+(my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
 
 # NOTES:
 # - "sourceforge" subject clipping code is only active when delivering to maildir.
 
-
-# Sam Nov 29 23:17:06 MET 2003
-(my $email='pflanze%gmx,ch')=~ tr/%,/@./;
-
 use strict;
 
 use constant DEBUG=> ($ENV{DEBUG} ? 1 : 0); # conditional needed for detainting
+
+use Cwd 'abs_path';
+our ($mydir, $myname); BEGIN {
+    my $location= (-l $0) ? abs_path ($0) : $0;
+    $location=~ /(.*?)([^\/]+?)_?\z/s or die "?";
+    ($mydir, $myname)=($1,$2);
+}
+use lib "$mydir/lib";
+
+use findfunctionalperl;
+
 use Carp;
 use Chj::Backtrace;
 use Chj::WithRepl qw(push_withrepl WithRepl_eval);
-
 push_withrepl (0) if DEBUG;
-
 use Scalar::Util 'tainted';
-
 use Chj::xopendir;
 use Chj::xperlfunc 'xlinkunlink';
-my $do_send_autoreply;
-BEGIN{
-    $do_send_autoreply=0;#
-
-    $0=~ /(.*?)([^\/]+)\z/s or die "?";
-    my ($mydir, $myname)=($1,$2);
-    ##is this safe? should bi right?
-    require "$mydir/mailmoverlib.pm";
-    require "$mydir/mailmover_autoreply.pm" if $do_send_autoreply;
-    my ($home)= $ENV{HOME}=~ m{^(/home/\w+)/?\z}
-      or die "weird HOME: '$ENV{HOME}'";
-    require "$home/.mailmover_config.pl"; # needs to define is_own_emailaddress; XXX hack.
-}
 use Chj::xtmpfile;
 use Chj::singlequote;
 use Chj::chompspace;
 use Chj::xsysopen 'xsysopen_excl';
 use Chj::xopen 'xopen_read';
 
+my $do_send_autoreply=0;
+
+use Mailmover::Lib;
+#use Mailmover::Autoreply;
+#XXX    require "$mydir/mailmover_autoreply.pm" if $do_send_autoreply;
+
+use Chj::TransparentNoncachingLazy;
+
+my ($home)= $ENV{HOME}=~ m{^(/home/\w+)/?\z}
+  or die "weird HOME: '$ENV{HOME}'";
+
+require "$home/.mailmover_config.pl"; # needs to define is_own_emailaddress; XXX hack.
+
+
 # wann will ich eigentlich msgid recorden wirklich?, wann will ich double elimination/checks? normalerweise ja nicht?. (doubleelim bloss wenn sie im gleichen folder landen).(NA oder  wenn notiz und das doppel beide im infolder landen dann auch, oder?, oder notiz unterdrucken dann? eh isch jo eh unterdrückt dann. na, aber dann später wenn die reply aus ml eintrifft, DANN die notiz unterdrücken wär was)
 
-$0=~ /(.*?)([^\/]+)\z/s or die "?";
-my ($mydir, $myname)=($1,$2);
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
     print "$myname -d sourcedir | -f sourcefile(s)  targetbase
@@ -203,21 +211,6 @@ sub Maybe_take_filename ( $ ) { # take filename iff it is looking like a maildir
 	# (otherwise let the caller let generate a new proper one)
 	return
     }
-}
-
-# now in FP as transparent lazy, but whatever... also, non-remembering
-# variant! # XX ahh, mailmoverlib.pm requires FP::Lazy anyway now. But
-# still, non-caching. TODO move to lib somehow.
-{
-    package TransparentNoncachingPromise;
-    use overload '""'=> 'force';
-    sub force {
-	shift->()
-    }
-}
-sub Lazy (&) {
-    my ($thunk)=@_;
-    bless $thunk, 'TransparentNoncachingPromise'
 }
 
 

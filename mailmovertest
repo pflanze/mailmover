@@ -1,20 +1,26 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -wT
 
-# Sam Sep  1 14:26:00 CEST 2007
-(my $email='pflanze%gmx,ch')=~ tr/%,/@./;
+#
+# Copyright 2007-2015 by Christian Jaeger, ch at christianjaeger ch
+# Published under the same terms as perl itself
+#
+(my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
 
 use strict;
 
-use Chj::ruse;#ach aber ruse von mailmoverlib geht dann doch nid. nid weils required wirdblos. sondern weils class array nutztr und das  problem  meldet  gag.  weils nid in sep file isch gell.klro.
-
-my ($mydir, $myname);
-BEGIN{
-    $0=~ /(.*?)([^\/]+)\z/s or die "?";
+use Cwd 'abs_path';
+our ($mydir, $myname); BEGIN {
+    my $location= (-l $0) ? abs_path ($0) : $0;
+    $location=~ /(.*?)([^\/]+?)_?\z/s or die "?";
     ($mydir, $myname)=($1,$2);
-    require "$mydir/mailmoverlib.pm";
-    #require "$mydir/mailmover_autoreply.pm" if $do_send_autoreply;
 }
+use lib "$mydir/lib";
+
+use findfunctionalperl;
+
+use Mailmover::Lib;
 use Chj::repl;
+use Chj::ruse; #?
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
