@@ -23,10 +23,19 @@ package Mailmover::safe_HOME;
 
 use strict; use warnings FATAL => 'uninitialized';
 
-sub safe_HOME {
-    my ($home)= $ENV{HOME}=~ m{^(/home/\w+)/?\z}
-      or die "weird HOME: '$ENV{HOME}'";
-    $home
+# COPY from Chj/xhome.pm, just don't want to depend on File::HomeDir
+# or something until it's clear which one to use (and how to write
+# files portably...)
+sub xeffectiveuserhome () {
+    my $uid= $>;
+    my ($name,$passwd,$_uid,$gid,
+	$quota,$comment,$gcos,$dir,$shell,$expire)
+      = getpwuid $uid
+	or die "unknown user for uid $uid";
+    $dir
 }
+# /COPY
+
+*safe_HOME= *xeffectiveuserhome;
 
 1
