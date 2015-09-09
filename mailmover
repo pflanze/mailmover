@@ -44,10 +44,16 @@ use Mailmover::Lib;
 
 use Chj::TransparentNoncachingLazy;
 
+
+# Read config:
 my ($home)= $ENV{HOME}=~ m{^(/home/\w+)/?\z}
   or die "weird HOME: '$ENV{HOME}'";
 
-require "$home/.mailmover_config.pl"; # needs to define is_own_emailaddress; XXX hack.
+use Mailmover::FirstFoundPath;
+require ( xfirst_found_path("$home/.mailmover_config.pl",
+			    "./.mailmover_config.pl",
+			    "./default_mailmover_config.pl") );
+# needs to define is_own_emailaddress
 
 
 # wann will ich eigentlich msgid recorden wirklich?, wann will ich double elimination/checks? normalerweise ja nicht?. (doubleelim bloss wenn sie im gleichen folder landen).(NA oder  wenn notiz und das doppel beide im infolder landen dann auch, oder?, oder notiz unterdrucken dann? eh isch jo eh unterdrückt dann. na, aber dann später wenn die reply aus ml eintrifft, DANN die notiz unterdrücken wär was)
