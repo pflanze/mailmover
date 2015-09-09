@@ -137,7 +137,7 @@ sub maybe_header_ignoringidenticalcopies {
 	}
 	$v[0]
     } else {
-	return
+	undef
     }
 }
 
