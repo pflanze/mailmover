@@ -24,5 +24,5 @@ git reset --hard
 
 DEBUG=1 ./mailmover -d MaildirIn/new/ -m Maildir
 
-echo "ok, ran through; now go look in Maildir whether it's status clean."
+echo "ran through successfully; now go look in Maildir whether it's status clean."
 
