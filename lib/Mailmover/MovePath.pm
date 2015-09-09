@@ -29,7 +29,17 @@ use strict; use warnings FATAL => 'uninitialized';
     use FP::Predicates "is_array";
     use FP::Array "array_append";
 
-    use FP::Struct [[*is_array, "items"]];
+    sub is_movepath_array {
+	my ($v)=@_;
+	is_array $v and @$v and do {
+	    for (@$v) {
+		length $_ or return ''
+	    }
+	    1
+	}
+    }
+
+    use FP::Struct [[*is_movepath_array, "items"]];
 
     sub untruncated_string {
 	@_==1 or die "wrong number of arguments";
