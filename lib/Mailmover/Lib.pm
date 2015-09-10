@@ -157,7 +157,10 @@ sub analyze_file($;$$) {
 				 # alternative? XX ah, perhaps that
 				 # the mail doesn't have a message-id
 				 # header is at least indicative of a
-				 # bounce?
+				 # bounce? XX ah, or this in the
+				 # original mail: 'Return-Path: <>',
+				 # or this in the current mail?:
+				 # 'Return-Path: <#@[]>'
  				 $folderpath= MovePath "backscatter";
 				 # XX only backscatter that was sent
 				 # to an invalid address of mine! How
