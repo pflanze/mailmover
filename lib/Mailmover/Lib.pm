@@ -140,25 +140,24 @@ sub analyze_file($;$$) {
 		} elsif ($subject=~ /^Delivery Status Notification/
 			 and $from=~ /^postmaster/) {
 		    $folderpath= MovePath "BOUNCE";
-		} elsif (#$subject=~ /failure notice/ and
+		} elsif ($subject=~ /failure notice/ and
 			 ($from=~ /\bMAILER[_-]DAEMON\@/i
 			  or
 			  $from=~ /\bpostmaster\@/i
 			 )
-			 #and $content=~ /ETH Life Newsletter/
-			 #and $messageid=~ /\@ethlife.ethz.ch/  # dann kam sie von hier. ; eh1: ist im content. eh2: muss auch lifecms enthalten. aber alte nl tun dies nicht.
-			 and do {
-			     $f->xread($content,$BUFSIZE);
-			     if ($content=~ /From: ETH Life/) {
-				 $folderpath= MovePath "newslettermanuell..$from";$type="system";
-				 1
-			     } elsif ($content=~ /Message-[Ii]d:[^\n]+lifecms/) {
-				 $folderpath= MovePath "lifecms..$from";$type="system";
-				 1
-			     } else {
-				 0
-			     }
-			 }) {
+			 # [siehe history fuer ethlife newsletter bounce (why war das?)]
+ 			 and do {
+ 			     $f->xread($content,$BUFSIZE);
+ 			     if ($content=~ /but the bounce bounced/) {
+ 				 $folderpath= MovePath "backscatter";
+				 # XX only backscatter that was sent
+				 # to an invalid address of mine! How
+				 # to trap the rest?
+ 				 1
+ 			     } else {
+ 				 0
+ 			     }
+ 			 }) {
 		    # filtered. else go on in other elsifs
 		} elsif ($from=~ /GMX Magazin <mailings\@gmx/) {
 		    $folderpath= MovePath "GMX Magazin"; $type="list";
