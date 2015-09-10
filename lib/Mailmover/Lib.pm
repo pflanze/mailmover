@@ -154,7 +154,10 @@ sub analyze_file($;$$) {
 				 # necessary to see that it tried to
 				 # deliver to *us*, not remotely.
 				 # Mess. XX is there any solid
-				 # alternative?
+				 # alternative? XX ah, perhaps that
+				 # the mail doesn't have a message-id
+				 # header is at least indicative of a
+				 # bounce?
  				 $folderpath= MovePath "backscatter";
 				 # XX only backscatter that was sent
 				 # to an invalid address of mine! How
