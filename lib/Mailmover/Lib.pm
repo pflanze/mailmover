@@ -148,7 +148,13 @@ sub analyze_file($;$$) {
 			 # [siehe history fuer ethlife newsletter bounce (why war das?)]
  			 and do {
  			     $f->xread($content,$BUFSIZE);
- 			     if ($content=~ /but the bounce bounced/) {
+ 			     if ($content=~ /but the bounce bounced\! *\n *\n *<[^\n]*>: *\n *Sorry, no mailbox here by that name/s) {
+				 # ^ the 'Sorry' check (or checking
+				 # the domain of the address) is
+				 # necessary to see that it tried to
+				 # deliver to *us*, not remotely.
+				 # Mess. XX is there any solid
+				 # alternative?
  				 $folderpath= MovePath "backscatter";
 				 # XX only backscatter that was sent
 				 # to an invalid address of mine! How
