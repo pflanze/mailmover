@@ -36,7 +36,7 @@ use Chj::chompspace;
 use Chj::xsysopen 'xsysopen_excl';
 use Chj::xopen 'xopen_read';
 use Mailmover::MovePath;
-
+use Mailmover::l10n;
 use Mailmover::detaint;
 $ENV{PATH}= detaint ($ENV{PATH}); # just trust it, it's always under
                                   # our control, isnt't it?
@@ -57,7 +57,10 @@ my $home= safe_HOME;
 require ( xfirst_found_path("$home/.mailmover_config.pl",
 			    "./.mailmover_config.pl",
 			    "./default_mailmover_config.pl") );
-# needs to define is_own_emailaddress and own_emailaddress
+# needs to define is_own_emailaddress, own_emailaddress and
+# mailbox_language
+
+$l10n_lang= mailbox_language();
 
 
 sub usage {
@@ -270,9 +273,11 @@ sub conditional_move_file($ $ ) {
 			    $sub= Chj::Maildir::Subfolder->new ($sub,$_);
 			}
 			$sub->create(1)
-			  and warn ("created new folder $quotedfolderpath\n");
-			# ^ XXX better write specialized message (in
-			# subject) instead of generic error message.
+			  and warn (__("created new folder:")
+				    ." $quotedfolderpath\n");
+			# Instead send specialized notification
+			# message? But that's bad for testing. Instead
+			# detect specially in warning handler?
 			$sub
 		    }
 		};
@@ -340,7 +345,9 @@ sub conditional_move_file($ $ ) {
 		my $targetfolder= $targetbase . "/" . $folderpath->string($targetbase);
 		if (! -d $targetfolder) {
 		    xmkdir $targetfolder;
-		    warn "created new folder '$targetfolder'\n";# vielleicht in subject schreiben besser!!todo.
+		    warn __("created new folder:")." '$targetfolder'\n";
+		    # better write special email? But that's bad for
+		    # testing.
 		} else {
 		    $targetfolder_is_symlink= readlink $targetfolder;
 		    # or do{ $!== E.... or..
@@ -365,24 +372,27 @@ sub conditional_move_file($ $ ) {
 		if (is_own_emailaddress($from)) {
 		    save_is_own($mail);
 		} elsif (is_reply($mail)){
-		    writewarnmail("Antwort: $quotedsubject",
-				  "Antwort auf deinen thread,\n".
-				  "     From $quotedfrom\n".
-				  "  Subject $quotedsubject\n".
-				  "in folder $quotedfolderpath eingetroffen.\n");
+		    writewarnmail(__("Reply").": $quotedsubject",
+				  __("A followup to your email")."\n".
+				  __("     From")." $quotedfrom\n".
+				  __("  Subject")." $quotedsubject\n".
+				  __("has arrived in folder ").$quotedfolderpath
+				  .__(" eingetroffen").".\n");
 		    $already_warned=1;
 		}
 	    }
 	}
 	if ($important and !$already_warned){
 	    writewarnmail
-	      (($folderpath->string($targetbase)=~/inbox-big/ ? "Big" : "Wichtig")
+	      (($folderpath->string($targetbase)=~/inbox-big/ ?
+		__("Big") : __("Important"))
 	       .": $quotedsubject",
 
-	       "Email mit\n".
-	       "     From $quotedfrom\n".
-	       "  Subject $quotedsubject\n".
-	       "in folder $quotedfolderpath eingetroffen.\n");
+	       __("Email mit\n").
+	       __("     From")." $quotedfrom\n".
+	       __("  Subject")." $quotedsubject\n".
+	       __("has arrived in folder ").$quotedfolderpath
+	       .__(" eingetroffen").".\n");
 	}
 
 	# send autoreply:
@@ -433,7 +443,7 @@ sub conditional_move_file($ $ ) {
 				($senderaddress,
 				 own_emailaddress (),
 				 scalar $mail->maybe_decoded_header("subject"))
-				  and warn "sent autoreply\n";
+				  and warn __("sent autoreply")."\n";
 			}
 		    }
 		}
@@ -445,16 +455,17 @@ sub conditional_move_file($ $ ) {
 	    die $@
 	}
     };
-    push @warns, "Error/exception:\n".$@ if $@;
+    push @warns, __("Error/exception:\n").$@ if $@;
 
-    writewarnmail("Warnings for email $quotedsubject",
-		  "Warnings for email:\n".
-		  "     From $quotedfrom\n".
-		  "  Subject $quotedsubject\n".
-		  "put to folder $quotedfolderpath:\n\n".
-		  join "\n\n",@warns)
-      if @warns;
-    @warns=(); # !
+    if (@warns) {
+	writewarnmail(__("Warnings for email")." $quotedsubject",
+		      __("Warnings for email").":\n".
+		      __("     From")." $quotedfrom\n".
+		      __("  Subject")." $quotedsubject\n".
+		      __("saved in folder")." $quotedfolderpath:\n\n".
+		      join "\n\n",@warns);
+	@warns=(); # !
+    }
 }
 
 # main:

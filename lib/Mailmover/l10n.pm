@@ -39,8 +39,24 @@ our $translations=
   +{
     "Subject"=> {de=> "Betreff"},
     "From"=> {de=> "Von"},
+    "     From"=> {de=>
+    "      Von"},
+    "  Subject"=> {de=>
+    "  Betreff"},
     "To/Cc"=> {de=> "An"},
     "Date"=> {de=> "Datum"},
+    "created new folder:"=> {de=> "Neuer Ordner erstellt:"},
+    "Reply"=> {de=> "Antwort"},
+    "A followup to your email"=> {de=> "Eine Nachfolge-Email auf deine Email"},
+    "has arrived in folder "=> {de=> "ist in Order "},
+    " eingetroffen"=> {de=> " eingetroffen", en=> ""},
+    "Big"=> {de=> "Gross"},
+    "Important"=> {de=> "Wichtig"},
+    "Email with\n"=> {de=> "Email mit\n"},
+    "sent autoreply"=> {de=> "Abwesenheitsnotiz gesendet"},
+    "Error/exception:\n"=> {de=> "Fehler/Ausnahmebedingung:\n"},
+    "Warnings for email"=> {de=> "Warnings for email"},
+    "saved in folder"=> {de=> "gespeichert in Ordner"},
    };
 
 sub __ ($) {
@@ -51,12 +67,12 @@ sub __ ($) {
 	    $v
 	} else {
 	    warn "missing translation for '$str' to '$l10n_lang'"
-		unless ($l10n_lang eq "en");
+	      unless ($l10n_lang eq "en");
 	    $str
 	}
     } else {
 	warn "missing translations for '$str'"
-	    unless ($l10n_lang eq "en");
+	  unless ($l10n_lang eq "en");
 	$str
     }
 }

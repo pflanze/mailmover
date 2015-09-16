@@ -10,4 +10,10 @@ sub own_emailaddress {
     'XXX@YYY.org'
 }
 
+# Which language the user would like to read mailmover messages in:
+# (XX perhaps also to be used for autoreplies in the future?)
+sub mailbox_language {
+    "en"
+}
+
 1
