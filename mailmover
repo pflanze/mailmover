@@ -274,13 +274,15 @@ sub conditional_move_file($ $ ) {
 		};
 		my $deliver= sub {
 		    my ($filepath,$sub,$maybe_filename)=@_;
-		    $sub->deliver_file ($filepath,
-					$maybe_filename || Maybe_take_filename($filepath));
+		    $sub->deliver_file
+		      ($filepath,
+		       $maybe_filename || Maybe_take_filename($filepath));
 		};
 		if ($type eq "sourceforge") {
 		    &$deliver($filepath,  &$make_sub($folderpath, 1));
 
-		    # isnt't it hacky: in mailmoverlib I've got the head in memory anyway. hm.
+		    # isnt't it HACKY: in mailmoverlib I've got the
+		    # head in memory anyway.
 		    my $in= xopen_read $filepath;
 		    my $t= xtmpfile "$targetbase/tmp/"; # don't forget the end slash
 		    my $originator= do {
@@ -322,7 +324,6 @@ sub conditional_move_file($ $ ) {
 		    }
 		    $in->xclose;
 		    $t->xclose;
-		    #warn "t->path is '".$t->path."'";
 		    &$deliver($t->path,
 			      &$make_sub($folderpath, 0),
 			      Maybe_take_filename($filepath));
