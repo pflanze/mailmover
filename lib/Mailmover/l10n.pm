@@ -55,7 +55,7 @@ our $translations=
     "Email with\n"=> {de=> "Email mit\n"},
     "sent autoreply"=> {de=> "Abwesenheitsnotiz gesendet"},
     "Error/exception:\n"=> {de=> "Fehler/Ausnahmebedingung:\n"},
-    "Warnings for email"=> {de=> "Warnings for email"},
+    "Warnings for email"=> {de=> "Warnungen für Email"},
     "saved in folder"=> {de=> "gespeichert in Ordner"},
    };
 
