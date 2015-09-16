@@ -159,7 +159,7 @@ usage "give exactly one of --stdin / --files / --dir"
 usage "don't give files unless --files is given"
   if (@args > 1 and not $opt_files);
 
-usage "--repeat requires --loop-every" if $opt_repeat and not $opt_loop;
+usage "--repeat requires --loop-every" if ($opt_repeat and not $opt_loop);
 
 my $targetbase= do {
     my $p= pop @args;
