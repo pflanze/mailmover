@@ -45,7 +45,8 @@ my $do_send_autoreply=0;
 
 use Mailmover::Lib;
 #use Mailmover::Autoreply;
-#XXX    require "$mydir/mailmover_autoreply.pm" if $do_send_autoreply;
+#XXX    require "$mydir/mailmover_autoreply.pm"
+die "unfinished" if $do_send_autoreply;
 
 use Chj::TransparentNoncachingLazy;
 
@@ -266,7 +267,7 @@ sub conditional_move_file($ $ ) {
 			}
 			$sub->create(1)
 			  and warn ("created new folder $quotedfolderpath\n");
-			# ^ XX better write specialized message (in
+			# ^ XXX better write specialized message (in
 			# subject) instead of generic error message.
 			$sub
 		    }
