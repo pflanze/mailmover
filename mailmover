@@ -182,7 +182,11 @@ if ($opt_maildirs) {
 my @warns;
 
 unless (DEBUG) {
-    $SIG{__WARN__}=sub{push @warns,"Warning:\n".(Carp::longmess @_)};
+    $SIG{__WARN__}= sub {
+	my $msg= join("", @_);
+	push @warns,
+	  $msg=~ /\n\z/s ? $msg : Carp::longmess($msg);
+    };
 }
 
 {
@@ -443,12 +447,13 @@ sub conditional_move_file($ $ ) {
     };
     push @warns, "Error/exception:\n".$@ if $@;
 
-    writewarnmail("warnings for email $quotedsubject",
-		  "warnings for email:\n".
+    writewarnmail("Warnings for email $quotedsubject",
+		  "Warnings for email:\n".
 		  "     From $quotedfrom\n".
 		  "  Subject $quotedsubject\n".
-		  "put to folder $quotedfolderpath\n".
-		  join "\n",@warns) if @warns;
+		  "put to folder $quotedfolderpath:\n\n".
+		  join "\n\n",@warns)
+      if @warns;
     @warns=(); # !
 }
 
