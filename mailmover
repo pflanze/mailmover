@@ -203,7 +203,7 @@ unless (DEBUG) {
 	    1
 	} or die "wanted to send mailasstring '$subj' but: $@";
 	$base ||= Chj::Maildir::Basefolder->new($targetbase_messages);
-	my $mail = Chj::Sendmail::prepare_mailasstring(To=>"you",
+	my $mail = Chj::Sendmail::prepare_mailasstring(To=>__("you"),
 						       From=>"$myname",
 						       Subject=>"$subj",
 						       Data=>"$data");
