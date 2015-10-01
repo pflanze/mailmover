@@ -115,8 +115,7 @@ sub analyze_file($;$$) {
 	}
     }
 
-
-    # noch gemäss subject einiges filtern:
+    # various subject checks
     if (!$folderpath) {
 	if (my $subject= $head->maybe_decoded_header("subject")) {
 	    # system mails
@@ -133,10 +132,6 @@ sub analyze_file($;$$) {
 		    $folderpath= MovePath $subject;$type="system";#gefährlich? jaaaa war es!!! jetzt hab ich unten geflickt.
 		} elsif ($subject=~ /^Cron/ and $from=~ /Cron Daemon/) {
 		    $folderpath= MovePath $subject;$type="system";
-# 		} elsif ($subject=~ /out of office autoreply/i
-# 			 #or
-# 			) {
-# 		    $folderpath= MovePath "AUTOREPLY";
 		} elsif ($subject=~ /^Delivery Status Notification/
 			 and $from=~ /^postmaster/) {
 		    $folderpath= MovePath "BOUNCE";
@@ -196,6 +191,8 @@ sub analyze_file($;$$) {
 	    }
 	}
     }
+
+    # postmaster
     if (!$folderpath) {
 	if (my $to= $head->maybe_header("to")) {
 	    if ($to=~ /^(postmaster\@[^\@;:,\s]+[a-z])/) {
@@ -203,6 +200,8 @@ sub analyze_file($;$$) {
 	    }
 	}
     }
+
+    # facebook
     if (!$folderpath) {
 	if ($head->maybe_header('x-facebook')) {
 	    # XX how many times to get that header? Also, why never
@@ -221,33 +220,29 @@ sub analyze_file($;$$) {
 	}
     }
 
-    if (!$folderpath) { # wie oft prüfe ich den noch hehe ?..
+    if (!$folderpath) {
 	if (!$is_ham and defined($maybe_spamscore) and $maybe_spamscore > 0) {
 	    $folderpath = MovePath "möglicher spam";
 	}
     }
 
-    # nichts matchende sonstwohin:
+    # making the inbox
     if (!$folderpath) {
+	# check mail size, to avoid downloading big mails over mobile
+	# connections
 	my $s= xstat $filepath;
-	if ($s->size > 1000000) { #cj: ps. sollte size messung ausserhalb geschehen? weil, wenn per symlink redirected, ja doch wieder die frage ob dann-doch-nicht in die inbox.
+	if ($s->size > 5000000) {
 	    $folderpath= MovePath "inbox-big";$type="inbox";$important=1;
 	} else {
 	    $folderpath= MovePath "inbox" unless $opt_leaveinbox;$type="inbox";
-	}
-
-    } else {
-	my $str= $folderpath->untruncated_string;
-	if ($str eq "inbox" or $str eq "inbox-big") {
-	    die "mail '$filename' somehow managed to get foldername '$str'";
-	    #sollte nicht passieren vom Ablauf her
 	}
     }
     undef $messageid;
     ($head,$folderpath,$type,$important);
 }
 
-sub _einstampfen { # testcase siehe lombi:~/perldevelopment/test/mailmoverlib/t1
+
+sub _reduce { # testcase siehe lombi:~/perldevelopment/test/mailmoverlib/t1
     my ($str)=@_;
     if (defined $str) {
 	#$str=~ s/\s+/ /sg; cj 24.8.04: weil manche mailer wörter in mitte abeinanderbrechen, whitespace ganz raus.
@@ -301,14 +296,14 @@ sub _einstampfen { # testcase siehe lombi:~/perldevelopment/test/mailmoverlib/t1
     }
 }
 
-sub _eingestampftessubject {
+sub _reduced_subject {
     my ($mail)=@_;
-    _einstampfen($mail->maybe_decoded_header("subject","ascii"));
+    _reduce($mail->maybe_decoded_header("subject","ascii"));
 }
 
 sub is_reply {
     my ($mail) = @_;
-    if (my $subj= _eingestampftessubject($mail)) {
+    if (my $subj= _reduced_subject($mail)) {
 	my $ownsubjectstable= Chj::FileStore::PIndex->new($ownsubjects_base);
 	return 1
 	  if $ownsubjectstable->exists($subj);
@@ -334,7 +329,7 @@ sub save_is_own {
     my ($mail) = @_;
     my $ownmsgidtable= Chj::FileStore::PIndex->new($ownmsgid_base);
     $ownmsgidtable->add(scalar pick_out_of_anglebrackets($mail->maybe_first_header("message-id")),"");
-    if (my $subj= _eingestampftessubject($mail)) {
+    if (my $subj= _reduced_subject($mail)) {
 	my $ownsubjectstable= Chj::FileStore::PIndex->new($ownsubjects_base);
 	$ownsubjectstable->add($subj,"");
     }
