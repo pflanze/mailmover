@@ -237,7 +237,7 @@ sub analyze_file($;$$) {
 	    $folderpath= MovePath "inbox" unless $opt_leaveinbox;$type="inbox";
 	}
     }
-    undef $messageid;
+
     ($head,$folderpath,$type,$important);
 }
 
