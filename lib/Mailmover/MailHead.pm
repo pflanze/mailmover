@@ -162,8 +162,17 @@ sub maybe_decoded_header {
     }
 }
 
+
 # does not belong into base package anymore:
-my %known_list_precedences= map {$_=>undef} qw( bulk list );
+
+my $is_list_precedence= sub {
+    my ($precedence)=@_;
+    $precedence= lc($precedence);
+    $precedence=~ s/^\s+//s;
+    $precedence=~ s/\s+\z//s;
+    $precedence eq "bulk" or $precedence eq "list"
+};
+
 sub maybe_mailinglist_id {
     my $self=shift;
     my ($value,$id);
@@ -228,10 +237,7 @@ sub maybe_mailinglist_id {
 	    }
 	}
 	if (my $precedence= $self->maybe_header("precedence")) {
-	    $precedence= lc($precedence);
-	    $precedence=~ s/^\s+//s;
-	    $precedence=~ s/\s+\z//s;
-	    if (exists $known_list_precedences{$precedence}) {
+	    if (&$is_list_precedence($precedence)) {
 	      RESENT:{
 		    if ($value= $self->maybe_header("Resent-From")) {
 			#warn "entered Resent-From check";
