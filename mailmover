@@ -35,6 +35,7 @@ use Chj::singlequote;
 use Chj::chompspace;
 use Chj::xsysopen 'xsysopen_excl';
 use Chj::xopen 'xopen_read';
+use FP::IOStream qw(xopendir_pathstream);
 use Mailmover::MovePath;
 use Mailmover::l10n;
 use Mailmover::detaint;
@@ -476,11 +477,9 @@ usage "only one source dir argument allowed"
   if $sourcedir and @args;
 
 if ($sourcedir) {
-    DO: {
-	my $d= xopendir $sourcedir;
-	while(defined(my$item=$d->xnread)){
-	    conditional_move_file("$sourcedir/$item",$targetbase);
-	}
+  DO: {
+	xopendir_pathstream ($sourcedir)->sort->for_each
+	  (sub { conditional_move_file($_[0],$targetbase) });
 	if ($opt_loop) {
 	    sleep $opt_loop;
 	    print STDERR "$myname: redoiing\n" if $DEBUG;
