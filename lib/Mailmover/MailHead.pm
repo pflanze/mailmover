@@ -344,6 +344,8 @@ sub lookslike_autoreply { # cj 10.10.04; sollte 1. wohl eben auch nicht in basis
     if (my $xmailer= $self->maybe_decoded_header("X-Mailer")) {
 	return 1 if $xmailer=~ /vacation/i;
 	return 1 if $xmailer=~ /Autoresp/i;
+	# "Oracle's Siebel Email Marketing", seen used for auto-response:
+	return 1 if $xmailer=~ /\bSiebel /;
     }
     if (my $autosubmitted= $self->maybe_decoded_header("Auto-Submitted")) {
 	#return 1 if $autosubmitted=~ /auto/i; # auto-replied
