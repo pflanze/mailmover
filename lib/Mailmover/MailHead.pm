@@ -165,11 +165,21 @@ sub maybe_decoded_header {
 
 # does not belong into base package anymore:
 
+# always returns it cleaned up, in lowercase
+sub maybe_precedence {
+    my $self=shift;
+    if (my $precedence= $self->maybe_header("precedence")) {
+	$precedence= lc($precedence);
+	$precedence=~ s/^\s+//s;
+	$precedence=~ s/\s+\z//s;
+	$precedence
+    } else {
+	undef
+    }
+}
+
 my $is_list_precedence= sub {
     my ($precedence)=@_;
-    $precedence= lc($precedence);
-    $precedence=~ s/^\s+//s;
-    $precedence=~ s/\s+\z//s;
     $precedence eq "bulk" or $precedence eq "list"
 };
 
@@ -236,7 +246,7 @@ sub maybe_mailinglist_id {
 		warn "invalid x-mailing-list format '$value'";
 	    }
 	}
-	if (my $precedence= $self->maybe_header("precedence")) {
+	if (my $precedence= $self->maybe_precedence) {
 	    if (&$is_list_precedence($precedence)) {
 	      RESENT:{
 		    if ($value= $self->maybe_header("Resent-From")) {
