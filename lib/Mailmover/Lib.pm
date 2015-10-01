@@ -296,14 +296,14 @@ sub _reduce { # testcase siehe lombi:~/perldevelopment/test/mailmoverlib/t1
     }
 }
 
-sub _reduced_subject {
+sub maybe_reduced_subject {
     my ($mail)=@_;
     _reduce($mail->maybe_decoded_header("subject","ascii"));
 }
 
 sub is_reply {
     my ($mail) = @_;
-    if (my $subj= _reduced_subject($mail)) {
+    if (my $subj= maybe_reduced_subject($mail)) {
 	my $ownsubjectstable= Chj::FileStore::PIndex->new($ownsubjects_base);
 	return 1
 	  if $ownsubjectstable->exists($subj);
@@ -329,7 +329,7 @@ sub save_is_own {
     my ($mail) = @_;
     my $ownmsgidtable= Chj::FileStore::PIndex->new($ownmsgid_base);
     $ownmsgidtable->add(scalar pick_out_of_anglebrackets($mail->maybe_first_header("message-id")),"");
-    if (my $subj= _reduced_subject($mail)) {
+    if (my $subj= maybe_reduced_subject($mail)) {
 	my $ownsubjectstable= Chj::FileStore::PIndex->new($ownsubjects_base);
 	$ownsubjectstable->add($subj,"");
     }
