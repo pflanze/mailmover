@@ -347,25 +347,30 @@ sub maybe_spamscore {#ps. like is_spam: what if multiple spamchecks were done?
     }
 }
 
+# to be used after mailing-list check, but before spam check, right?
 sub is_autoreply {
     my $self=shift;
+    my $score=0;
+    if (my $precedence= $self->maybe_precedence) {
+	$score+= 1 if $precedence eq "junk";
+	# XX not necessarily?, will see.
+    }
     if (my $subject= $self->maybe_decoded_header("subject")) {
-	return 1 if $subject=~ /Your E-Mail Message will not be read/i;
-	return 1 if $subject=~ /Office closed/i;
-	return 1 if $subject=~ /Auto.?Reply/i;
-	return 1 if $subject=~ /abwesenheitsnotiz/i;
+	$score+= 1 if $subject=~ /Your E-Mail Message will not be read/i;
+	$score+= 1 if $subject=~ /Office closed/i;
+	$score+= 1 if $subject=~ /Auto.?Reply/i;
+	$score+= 1 if $subject=~ /abwesenheitsnotiz/i;
     }
     if (my $xmailer= $self->maybe_decoded_header("X-Mailer")) {
-	return 1 if $xmailer=~ /vacation/i;
-	return 1 if $xmailer=~ /Autoresp/i;
+	$score+= 1 if $xmailer=~ /vacation/i;
+	$score+= 1 if $xmailer=~ /Autoresp/i;
 	# "Oracle's Siebel Email Marketing", seen used for auto-response:
-	return 1 if $xmailer=~ /\bSiebel /;
+	$score+= 1 if $xmailer=~ /\bSiebel /;
     }
     if (my $autosubmitted= $self->maybe_decoded_header("Auto-Submitted")) {
-	#return 1 if $autosubmitted=~ /auto/i; # auto-replied
-	return 1 if $autosubmitted;
+	$score+= 1  # if $autosubmitted=~ /auto/i; # auto-replied
     }
-    0
+    $score >= 1
 }
 
 1
