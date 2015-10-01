@@ -313,28 +313,26 @@ sub maybe_reduced_subject {
     _reduce($mail->maybe_decoded_header("subject","ascii"));
 }
 
+my $ownsubjectstable= Chj::FileStore::PIndex->new($ownsubjects_base);
+my $ownmsgidtable= Chj::FileStore::PIndex->new($ownmsgid_base);
+
 sub is_reply {
     my ($mail) = @_;
     if (my $subj= maybe_reduced_subject($mail)) {
-	my $ownsubjectstable= Chj::FileStore::PIndex->new($ownsubjects_base);
-	return 1
-	  if $ownsubjectstable->exists($subj);
-	# ev. todo: hier auch noch mailingliste berücksichtigen? also subject.liste-kombination soll matchen?.
+	return 1 if $ownsubjectstable->exists($subj);
+	# XX also check mailing list? i.e. should only the right
+	# combination of subject and list trigger?
     }
-    my $in_reply_to = pick_out_of_anglebrackets($mail->maybe_first_header("In-Reply-To"));
+
     # many (broken?) clients actually do seem to send multiple such headers
-    return unless defined $in_reply_to;
-    my $ownmsgidtable= Chj::FileStore::PIndex->new($ownmsgid_base);
-    return
-      $ownmsgidtable->exists($in_reply_to)
-	or
-	  sub {
-	      for (pick_out_of_anglebrackets($mail->maybe_header("References"))) {
-		  return 1
-		    if $ownmsgidtable->exists($_);
-	      }
-	      0;
-	  }->();
+    if (defined (my $in_reply_to = pick_out_of_anglebrackets
+		 ($mail->maybe_first_header("In-Reply-To")))) {
+	return 1 if $ownmsgidtable->exists($in_reply_to)
+    }
+
+    for (pick_out_of_anglebrackets($mail->maybe_header("References"))) {
+	return 1 if $ownmsgidtable->exists($_);
+    }
 }
 
 sub save_is_own {
