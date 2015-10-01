@@ -428,7 +428,7 @@ sub conditional_move_file($ $ ) {
 		    #warn "not filtered but still bulky email";
 		} else {
 		    # really not an autoreply?
-		    unless ($mail->lookslike_autoreply) {
+		    unless ($mail->is_autoreply) {
 			unless (do {
 			    if (defined(my $maybe_spamscore=$mail->maybe_spamscore)) {
 				$maybe_spamscore >= 0.5

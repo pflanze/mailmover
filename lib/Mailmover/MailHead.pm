@@ -337,7 +337,7 @@ sub maybe_spamscore {#ps. like is_spam: what if multiple spamchecks were done?
     }
 }
 
-sub lookslike_autoreply {
+sub is_autoreply {
     my $self=shift;
     if (my $subject= $self->maybe_decoded_header("subject")) {
 	return 1 if $subject=~ /Your E-Mail Message will not be read/i;
