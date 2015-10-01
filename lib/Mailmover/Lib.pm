@@ -33,7 +33,7 @@ use FP::Lazy;
 use Mailmover::MovePath;
 use Mailmover::MailUtil qw(pick_out_of_anglebrackets);
 use Mailmover::MailHead;
-
+use Mailmover::l10n;
 
 our ($DEBUG,$verbose);
 
@@ -222,7 +222,7 @@ sub analyze_file($;$$) {
 
     if (!$folderpath) {
 	if (!$is_ham and defined($maybe_spamscore) and $maybe_spamscore > 0) {
-	    $folderpath = MovePath "möglicher spam";
+	    $folderpath = MovePath __("possible spam");
 	}
     }
 
