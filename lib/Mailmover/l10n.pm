@@ -59,6 +59,7 @@ our $translations=
     "saved in folder"=> {de=> "gespeichert in Ordner"},
     "you"=> {de=> "dich"},
     "possible spam"=> {de=> "möglicher spam"},
+    "auto-reply through list"=> {de=> "Auto-Reply durch Liste"},
    };
 
 sub __ ($) {

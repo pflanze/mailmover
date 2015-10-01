@@ -220,6 +220,18 @@ sub analyze_file($;$$) {
 	}
     }
 
+    # auto-replies received over mailing lists
+    if ($head->is_autoreply) {
+	if (is_reply ($head)) {
+	    $folderpath= MovePath __("auto-reply through list");
+	}
+	# In auto-replies so bad that they don't check out as replies
+	# to one of one's own mails to a list, there's still the
+	# chance that those are captured in "possible spam". They
+	# might be trained as spam from there, too (possibly a good or
+	# bad idea, let the user 'decide').
+    }
+
     if (!$folderpath) {
 	if (!$is_ham and defined($maybe_spamscore) and $maybe_spamscore > 0) {
 	    $folderpath = MovePath __("possible spam");
