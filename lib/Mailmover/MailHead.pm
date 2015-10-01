@@ -317,7 +317,7 @@ sub is_spam {
     }
 }
 
-sub maybe_spamscore {#ps. ebenso wie is_spam: was wenn multiple spamchecks were done?
+sub maybe_spamscore {#ps. like is_spam: what if multiple spamchecks were done?
     my $self=shift;
     if (my $status=$self->maybe_first_header("X-Spam-Status")) {
 	if ($status=~ /score=(-?\d+(?:\.\d+)?)/){
@@ -331,10 +331,8 @@ sub maybe_spamscore {#ps. ebenso wie is_spam: was wenn multiple spamchecks were 
     }
 }
 
-sub lookslike_autoreply { # cj 10.10.04; sollte 1. wohl eben auch nicht in basisklasse sein und 2. ist sehr heuristisch (nadel im heustack)
+sub lookslike_autoreply {
     my $self=shift;
-    # schau nur inhalt an, denn bulk header wurde schon angekuckt.
-    # obwohl: scheint dass precedence junk nur bei autoreplies (und ev spam??) angewendet wird, list mails haben bulk oder list.
     if (my $subject= $self->maybe_decoded_header("subject")) {
 	return 1 if $subject=~ /Your E-Mail Message will not be read/i;
 	return 1 if $subject=~ /Office closed/i;
