@@ -94,7 +94,8 @@ my @args;
 my $DEBUG=0;
 my $verbose=0;
 my ($sourcedir);
-my ($opt_leaveinbox,
+my ($opt_config,
+    $opt_leaveinbox,
     $opt_loop,
     $opt_repeat,
     $opt_is_ham,
@@ -108,6 +109,12 @@ for (my $i=0; $i<=$#ARGV; $i++) {
     } elsif ($_ eq '--') {
     	push @args, @ARGV[$i+1..$#ARGV];
     	last;
+    } elsif (/^--config(?:=(.*))?$/) {
+        if (defined $1 and length $1) {
+            $opt_config=$1
+        } else {
+            $opt_config=$ARGV[++$i] or usage "missing argument for '$_' option";
+        }
     } elsif (/^--?d(?:dir(?:=(.*))?)?$/) {
         if (defined $1) {
             $sourcedir=$1
@@ -164,6 +171,11 @@ usage "don't give files unless --files is given"
   if (@args > 1 and not $opt_files);
 
 usage "--repeat requires --loop-every" if ($opt_repeat and not $opt_loop);
+
+if (defined $opt_config) {
+    my $path= detaint($opt_config);
+    require $path;
+}
 
 my $targetbase= do {
     my $p= pop @args;
