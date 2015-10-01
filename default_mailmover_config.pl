@@ -7,7 +7,7 @@ sub is_own_emailaddress {
 # one email address that is to be used for sending autoreply (and
 # perhaps other) mails
 sub own_emailaddress {
-    'XXX@YYY.org'
+    undef # 'XXX@YYY.org'
 }
 
 # Which language the user would like to read mailmover messages in:

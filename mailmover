@@ -9,7 +9,7 @@
 # NOTES:
 # - "sourceforge" subject clipping code is only active when delivering to maildir.
 
-use strict;
+use strict; use warnings FATAL => 'uninitialized';
 
 use constant DEBUG=> ($ENV{DEBUG} ? 1 : 0); # conditional needed for detainting
 

@@ -23,7 +23,6 @@ package Mailmover::Lib;
 
 use strict; use warnings FATAL => 'uninitialized';
 
-use strict;
 use Chj::xopen qw(xopen_read);
 use Chj::xperlfunc;
 use Chj::FileStore::MIndex;
