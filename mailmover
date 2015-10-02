@@ -11,8 +11,6 @@
 
 use strict; use warnings FATAL => 'uninitialized';
 
-use constant DEBUG=> ($ENV{DEBUG} ? 1 : 0); # conditional needed for detainting
-
 use Cwd 'abs_path';
 our ($mydir, $myname); BEGIN {
     my $location= (-l $0) ? abs_path ($0) : $0;
@@ -26,7 +24,6 @@ use findfunctionalperl;
 use Carp;
 use Chj::Backtrace;
 use Chj::WithRepl qw(push_withrepl WithRepl_eval);
-push_withrepl (0) if DEBUG;
 use Scalar::Util 'tainted';
 use Chj::xopendir;
 use Chj::xperlfunc ':all';
@@ -172,6 +169,8 @@ usage "don't give files unless --files is given"
 
 usage "--repeat requires --loop-every" if ($opt_repeat and not $opt_loop);
 
+push_withrepl (0) if $DEBUG;
+
 if (defined $opt_config) {
     my $path= detaint($opt_config);
     require $path;
@@ -198,7 +197,7 @@ if ($opt_maildirs) {
 
 my @warns;
 
-unless (DEBUG) {
+unless ($DEBUG) {
     $SIG{__WARN__}= sub {
 	my $msg= join("", @_);
 	push @warns,
@@ -465,7 +464,7 @@ sub conditional_move_file($ $ ) {
 	}
 	1
     } || do {
-	if (DEBUG) {
+	if ($DEBUG) {
 	    die $@
 	}
     };

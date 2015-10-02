@@ -22,7 +22,7 @@ git reset --hard
 
 )
 
-DEBUG=1 ./mailmover --config ./MaildirIn/config.pl -d MaildirIn/new/ -m Maildir
+./mailmover --debug --config ./MaildirIn/config.pl -d MaildirIn/new/ -m Maildir
 
 echo "ran through successfully; now go look in Maildir whether it's status clean."
 
