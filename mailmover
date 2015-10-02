@@ -34,11 +34,12 @@ use Chj::xsysopen 'xsysopen_excl';
 use Chj::xopen 'xopen_read';
 use FP::IOStream qw(xopendir_pathstream);
 use FP::Ops qw(string_cmp);
+use FP::Untainted qw(untainted untainted_with);
 use Mailmover::MovePath;
 use Mailmover::l10n;
-use Mailmover::detaint;
-$ENV{PATH}= detaint ($ENV{PATH}); # just trust it, it's always under
-                                  # our control, isnt't it?
+
+$ENV{PATH}= untainted ($ENV{PATH});
+# just trust it, it's always under our control, isnt't it?
 
 my $do_send_autoreply=0;
 
@@ -172,7 +173,7 @@ usage "--repeat requires --loop-every" if ($opt_repeat and not $opt_loop);
 push_withrepl (0) if $DEBUG;
 
 if (defined $opt_config) {
-    my $path= detaint($opt_config);
+    my $path= untainted($opt_config);
     require $path;
 }
 
@@ -242,7 +243,7 @@ sub Maybe_take_filename ( $ ) { # take filename iff it is looking like a maildir
 
 sub conditional_move_file($ $ ) {
     my ($filepath,$targetbase)=@_;
-    $filepath= detaint $filepath; # coming from readdir or from arguments.
+    $filepath= untainted $filepath; # coming from readdir or from arguments.
 
     my $filename=$filepath; $filename=~ s{^.*/}{}s;
 

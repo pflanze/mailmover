@@ -22,9 +22,9 @@ use Mailmover::Lib;
 use Chj::repl;
 use Chj::ruse; #?
 
-use Mailmover::detaint;
-$ENV{PATH}= detaint ($ENV{PATH}); # just trust it, it's always under
-                                  # our control, isnt't it?
+use FP::Untainted;
+$ENV{PATH}= untainted ($ENV{PATH});
+# just trust it, it's always under our control, isnt't it?
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
