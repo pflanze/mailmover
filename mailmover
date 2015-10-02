@@ -63,8 +63,6 @@ require ( xfirst_found_path("$home/.mailmover_config.pl",
 # needs to define is_own_emailaddress, own_emailaddress and
 # mailbox_language
 
-$l10n_lang= mailbox_language();
-
 
 sub usage {
     print STDERR map{"$_\n"} @_ if @_;
@@ -183,6 +181,9 @@ if (defined $opt_config) {
     my $path= untainted($opt_config);
     require $path;
 }
+
+$l10n_lang= mailbox_language();
+
 
 my $targetbase= do {
     my $p= pop @args;
