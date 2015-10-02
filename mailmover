@@ -32,9 +32,12 @@ use Chj::singlequote;
 use Chj::chompspace;
 use Chj::xsysopen 'xsysopen_excl';
 use Chj::xopen 'xopen_read';
+use Chj::time qw(set_time);
+use Chj::pid qw(set_pid);
 use FP::IOStream qw(xopendir_pathstream);
 use FP::Ops qw(string_cmp);
 use FP::Untainted qw(untainted untainted_with);
+use FP::Optional qw(optionally);
 use Mailmover::MovePath;
 use Mailmover::l10n;
 
@@ -171,6 +174,10 @@ usage "don't give files unless --files is given"
 usage "--repeat requires --loop-every" if ($opt_repeat and not $opt_loop);
 
 push_withrepl (0) if $DEBUG;
+
+# undef means use the system call
+set_time optionally(*untainted_with)->($ENV{MAILMOVER_TIME}, qr/^\d{8,14}$/);
+set_pid optionally(*untainted_with)->($ENV{MAILMOVER_PID}, qr/^\d{1,10}$/);
 
 if (defined $opt_config) {
     my $path= untainted($opt_config);
