@@ -1,5 +1,6 @@
 .gitignore
 MANIFEST
+README.md
 default_mailmover_config.pl
 lib/Chj/TransparentNoncachingLazy.pm
 lib/Mailmover/FirstFoundPath.pm
@@ -9,7 +10,7 @@ lib/Mailmover/MailHead/t.pm
 lib/Mailmover/MailUtil.pm
 lib/Mailmover/MovePath.pm
 lib/Mailmover/MovePath/t.pm
-lib/Mailmover/detaint.pm
+lib/Mailmover/l10n.pm
 lib/Mailmover/safe_HOME.pm
 lib/findfunctionalperl.pm
 mailmover
