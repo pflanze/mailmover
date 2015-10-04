@@ -9,7 +9,7 @@ set -euo pipefail
 
 cd Maildir
 
-rm -rf * .Moved*/; mkdir tmp new cur
+rm -rf * .Z*/; mkdir tmp new cur
 
 )
 

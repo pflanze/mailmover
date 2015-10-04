@@ -285,8 +285,8 @@ sub conditional_move_file($ $ ) {
 			my @perhaps_type= length($type) ? $type : ();
 			$folderpath=
 			  ($flag_sourceforge_original ?
-			   MovePath("Moved", @perhaps_type, "original")
-			   : MovePath ("Moved", @perhaps_type)) ->append($folderpath);
+			   MovePath("Z", @perhaps_type, "original")
+			   : MovePath ("Z", @perhaps_type)) ->append($folderpath);
 			#/hacky
 			my @pathparts= $folderpath->string_split($targetbase);
 			my $sub= $maildirbasefolder;

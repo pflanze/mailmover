@@ -2,7 +2,7 @@
 - broken auto-responders sending replies to list mail: need to be
   delayed to give the own mail chance to arrive and be registered, so
   that auto-responses can be correlated with them (and if so, filtered
-  away (in Moved.junk.list-auto-replies or so?), if not, then one
+  away (in Z.junk.list-auto-replies or so?), if not, then one
   should see them in the inbox or something else that's closer)
 
   - will greylisting be enough?
