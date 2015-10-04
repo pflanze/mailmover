@@ -70,7 +70,7 @@ sub analyze_file($;$$) {
     my $is_spam= $is_ham ? 0 : $head->is_spam;
     if ($is_spam) {
 	warn "'$filename' is spam\n" if $DEBUG;
-	$folderpath= MovePath "spam";
+	$folderpath= MovePath __("spam");
     } elsif (! defined $is_spam) {
 	warn "'$filename' is_spam: not scanned\n" if $verbose;
     }

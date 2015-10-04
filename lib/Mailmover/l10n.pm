@@ -58,7 +58,8 @@ our $translations=
     "Warnings for email"=> {de=> "Warnungen für Email"},
     "saved in folder"=> {de=> "gespeichert in Ordner"},
     "you"=> {de=> "dich"},
-    "possible spam"=> {de=> "möglicher spam"},
+    "possible spam"=> {en=> " possible spam", de=> " möglicher Spam"},
+    "spam"=> {en=> " spam", de=> " Spam"},
     "auto-reply through list"=> {de=> "Auto-Reply durch Liste"},
    };
 
