@@ -23,25 +23,26 @@ use MIME::Words 'decode_mimewords';
 use Chj::Encode::Permissive 'encode_permissive';
 use Chj::chompspace;
 use Mailmover::MailUtil qw(pick_out_of_anglebrackets_or_original);
+use FP::PureArray;
+use FP::Predicates;
+use FP::Show;
 
-use Class::Array -fields=>(
-			   # ps warum's Inmail class gibt in elcms: weil es inder db es ja auch so gross will wie es eben ist i.e. ram grösse.  (chunking?)
-			   # enum? wie schon machte ich jenes, zahlen versus db.
-			   'Errors', #arrayrf
-			   'Warnings', #arrayrf
-			   'HeadersHash', #hashref, only single headers
-			   'HeadersArray', #arrayref, all headers
-			   'HeaderSHash', # $headers{$key}=[ multiple of same type as $header{$key} ]  (leider gabs HeadersHash schon drum S)
-			  );
+use FP::Struct
+  [
+   [*is_array, 'errors'],
+   [*is_array, 'warnings'], # hm unused?
+   [*is_hash, 'headersHash'],   # only single headers
+   [*is_array, 'headersArray'], # all headers
+   [*is_hash, 'headerSHash'],   # hash_of(*is_array), of all
+				# headers of the same key
+  ];
+
 
 sub new_from_fh {
     my $class=shift;
-    my ($fh)=@_; # assume this is blessed to Chj::IO::File? or do it now?
-    # assume it is rewinded (rewound).!
-    my $self= $class->SUPER::new;
-    @{$self}[Errors,Warnings]= ([],[]);
+    my ($fh)=@_; # assume this is blessed to Chj::IO::File and rewound
 
-    my (%header,@headers,@errors,%headers); # $headers{$key}=[ multiple of same type as $header{$key} ]
+    my (@errors,@warnings,%header,@headers,%headers);
     my ($lastheaderkey);
   HEADER:{
 	local $_;
@@ -51,12 +52,13 @@ sub new_from_fh {
 		if (/^(\w[\w.-]+): *(.*)/) {
 		    $lastheaderkey=lc($1);
 		    push @headers,$_;
-		    # Always keep the *last* header with same name in %header.
-		    # This way, multi-line build up is still correct.
-		    # Have to check in (with?) ->maybe_header() method if multiple.
-		    push @{ $headers{$lastheaderkey} }, [$#headers,$1,$2];
-		    $header{$lastheaderkey}=[$#headers,$1,$2];
-		} elsif (/^\s+(.*)/) {  #(naja, ist das alles so wirklich korrekt?)
+		    # Always keep the *last* header with same name in
+		    # %header.  This way, multi-line build up is still
+		    # correct.  Have to check in (with?)
+		    # ->maybe_header() method if multiple.
+		    push @{$headers{$lastheaderkey}}, [$#headers,$1,$2];
+		    $header{$lastheaderkey}= [$#headers,$1,$2];
+		} elsif (/^\s+(.*)/) {
 		    if ($lastheaderkey) {
 			$headers[-1].="\n\t$1";
 			$header{$lastheaderkey}[2].="\n\t$1"
@@ -67,10 +69,11 @@ sub new_from_fh {
 			    warn "bug?"
 			};
 		    } else {
-			push @errors, "First header does not start with a key: '$_'";
+			push @errors,
+			  "First header does not start with a key: ".show($_);
 		    }
 		} else {
-		    push @errors, "Header of unknown format: '$_'";
+		    push @errors, "Header of unknown format: ".show($_);
 		}
 	    } else {
 		last HEADER;
@@ -80,15 +83,16 @@ sub new_from_fh {
 	# no guarantee that a mail has a body at all (not even the
 	# empty line inbetween), so it's not an error.
     }
-    @{$self}[HeadersHash,HeadersArray,HeaderSHash]= (\%header,\@headers,\%headers);
-    $self->[Errors]= \@errors;
-    $self
+    $class->new_(errors=> \@errors,
+		 warnings=> \@warnings,
+		 headersHash=> \%header,
+		 headersArray=> \@headers,
+		 headerSHash=> \%headers)
 }
 
-# (this is not a pure function; the returned object might still
-# be. Again, how to handle exactly, re `is_pure`?)
 sub new_from_path {
-    my ($class,$path)=@_;
+    my $class=shift;
+    my ($path)=@_;
     require Chj::xopen;
     my $fh= Chj::xopen::xopen_read($path);
     my $self= $class->new_from_fh($fh);
@@ -100,9 +104,10 @@ sub new_from_path {
 sub maybe_header {
     my $self=shift;
     my ($key)=@_;
-    if (defined(my $h=$$self[HeadersHash]{lc($key)})) {
-	if (@{ $$self[HeaderSHash]{lc $key} } > 1) {
-	    warn "maybe_header method called where multiple headers of key '$key' exists";
+    if (defined(my $h=$$self{headersHash}{lc($key)})) {
+	if (@{ $$self{headerSHash}{lc $key} } > 1) {
+	    warn "maybe_header method called where multiple "
+	      ."headers of key '$key' exists";
 	    return undef
 	}
 	# Don't return header values with space at the end, since
@@ -130,7 +135,9 @@ sub maybe_header_ignoringidenticalcopies {
 	  CHECK: {
 		for (@v) {
 		    if ($_ ne $first) {
-			warn "maybe_header_ignoringidenticalcopies('$key'): multiple headers of key with *different* values exist";
+			warn("maybe_header_ignoringidenticalcopies('$key'):"
+			     ." multiple headers of key with *different* "
+			     ."values exist");
 			last CHECK;
 		    }
 		}
@@ -147,13 +154,13 @@ sub headers {
     my ($key)=@_;
     map {
 	chompspace($_->[2]);
-    } @{ $$self[HeaderSHash]{lc $key} }
+    } @{ $$self{headerSHash}{lc $key} }
 }
 
 sub maybe_decoded_header {
     my $self=shift;
     my ($key,$as_charset)=@_;
-    if (defined(my $h=$$self[HeadersHash]{lc($key)})) {
+    if (defined(my $h=$$self{headersHash}{lc($key)})) {
 	join("",
 	     map{ encode_permissive $_->[0],$_->[1],$as_charset }
 	     decode_mimewords(chompspace($h->[2])));
@@ -165,23 +172,33 @@ sub maybe_decoded_header {
 
 # does not belong into base package anymore:
 
-# always returns it cleaned up, in lowercase
-sub maybe_precedence {
+
+sub precedence_purearray {
     my $self=shift;
-    if (my $precedence= $self->maybe_header("precedence")) {
-	$precedence= lc($precedence);
-	$precedence=~ s/^\s+//s;
-	$precedence=~ s/\s+\z//s;
-	$precedence
-    } else {
-	undef
-    }
+    purearray
+      (map {
+	  my $precedence= lc($_);
+	  $precedence=~ s/^\s+//s;
+	  $precedence=~ s/\s+\z//s;
+	  $precedence
+      } $self->headers("precedence"));
 }
 
-my $is_list_precedence= sub {
-    my ($precedence)=@_;
-    $precedence eq "bulk" or $precedence eq "list"
-};
+sub is_list_precedence {
+    my $self=shift;
+    $self->precedence_purearray->any
+      (sub {
+	   $_[0] eq "bulk" or $_[0] eq "list"
+       });
+}
+
+sub is_junk_precedence {
+    my $self=shift;
+    $self->precedence_purearray->any
+      (sub {
+	   $_[0] eq "junk"
+       });
+}
 
 sub maybe_mailinglist_id {
     my $self=shift;
@@ -246,70 +263,68 @@ sub maybe_mailinglist_id {
 		warn "invalid x-mailing-list format '$value'";
 	    }
 	}
-	if (my $precedence= $self->maybe_precedence) {
-	    if (&$is_list_precedence($precedence)) {
-	      RESENT:{
-		    if ($value= $self->maybe_header("Resent-From")) {
-			#warn "entered Resent-From check";
-			if ($value=~ /<([^<>]{3,})>/) { # just in case
-			    #warn "note: even if debian mailinglists do not put resent-from into <>, this mail did it ('$value')"; -> cj14.12.: die neuen Debian BTS Mails tun dies.
-			    ##ps. cj 12.12.04 warum tat ich nicht pick_out_of_anglebrackets nehmen? aha: nur optional. // $value also nötig.
-			    $id=$1;
-			    #warn "id=$id";
-			} elsif (length $value > 3) {
-			    $id=$value;
-			    #warn "id=$id";
-			} else {
-			    warn "(almost-)empty Resent-From '$value'";
-			    last RESENT;
-			}
-			# cj 12.12.04: weil neuerdings eine email reinkam mit Resent-From: Hideki Yamane <henrich@samba.gr.jp> (== From) vom Debian BTS, und X-Loop: mysql@packages.qa.debian.org (vorsicht mehrere X-Loop headers sind in andern mails möglich), das noch prüfen:
-			my $p_from= chompspace pick_out_of_anglebrackets_or_original $self->maybe_header("from");
-			my $p_id= chompspace pick_out_of_anglebrackets_or_original $id; ##sollte zwar ja eben nicht mehr nötig sein, aber warum oben eigener müll gemacht?.
-			if (defined($p_from)
-			    and
-			    lc($p_from) eq lc($p_id)) {
-			    # need alternative value.
-			    #if (my @xloop= $self->maybe_header   aber das kann ich gar nicht, mehrere abfragen so. mann. schlecht, mal todo besseren head parser machen. auf wantarray schauen um zu sehen ob undef oder multiple geben.
-			    #if (my $xloop= $self->maybe_header("X-Loop")) { hm dumm ist dass bereits in meinem fall tatsächlich mehrere drin sind.
-			    #} else {
-			    #	warn "kein X-Loop maybe_header (oder mehrere) drin";
-			    #}
-			    my @xloop= $self->headers("X-Loop");
-			    my $xloop= do {
-				if (@xloop >=2) {
-				    my @xloopn= grep { ! /^[^\@]*\bowner\b/i } @xloop;
-				    #warn "xloops ohne owner: ".join(", ",@xloopn);
-				    if (@xloopn) {
-					@xloop= @xloopn;
-					#warn "since we still had one, this is now assigned to xloop";
-				    }
-				}
-				$xloop[-1]
-			    };
-			    if (defined $xloop) {
-				$id= chompspace pick_out_of_anglebrackets_or_original $xloop;
-				##Frage: warum hatte compiler nöd reklamiert über undef methode? aber runtime?
-				#warn "ok X-Loop maybe_header drin: id isch nun $id";
-				last SEARCH;
-			    } else {
-				#warn "kein X-Loop maybe_header drin";
-			    }
-			} else {
-			    last SEARCH;##frage gibt das ein warning wegen leave mehrere schritte? nah doch nid
-			}
+	if ($self->is_list_precedence) {
+	  RESENT:{
+		if ($value= $self->maybe_header("Resent-From")) {
+		    #warn "entered Resent-From check";
+		    if ($value=~ /<([^<>]{3,})>/) { # just in case
+			#warn "note: even if debian mailinglists do not put resent-from into <>, this mail did it ('$value')"; -> cj14.12.: die neuen Debian BTS Mails tun dies.
+			##ps. cj 12.12.04 warum tat ich nicht pick_out_of_anglebrackets nehmen? aha: nur optional. // $value also nötig.
+			$id=$1;
+			#warn "id=$id";
+		    } elsif (length $value > 3) {
+			$id=$value;
+			#warn "id=$id";
+		    } else {
+			warn "(almost-)empty Resent-From '$value'";
+			last RESENT;
 		    }
-		    #warn "still in Resent-From check, id is ".(defined($id)? "'$id'": "undef");
-		    #warn "id=$id";  wie kann das undef sein????--> mann blind auf beiden Augen
 		    # cj 12.12.04: weil neuerdings eine email reinkam mit Resent-From: Hideki Yamane <henrich@samba.gr.jp> (== From) vom Debian BTS, und X-Loop: mysql@packages.qa.debian.org (vorsicht mehrere X-Loop headers sind in andern mails möglich), das noch prüfen:
-		    # ----> NACH OBEN
-		}#/RESENT
-		# lugs: (mail alt dings)
-		if ($value= $self->maybe_header("sender")
-		    and $value=~ /^owner-(.*)/si) {
-		    $id=$1;
-		    last SEARCH;
+		    my $p_from= chompspace pick_out_of_anglebrackets_or_original $self->maybe_header("from");
+		    my $p_id= chompspace pick_out_of_anglebrackets_or_original $id; ##sollte zwar ja eben nicht mehr nötig sein, aber warum oben eigener müll gemacht?.
+		    if (defined($p_from)
+			and
+			lc($p_from) eq lc($p_id)) {
+			# need alternative value.
+			#if (my @xloop= $self->maybe_header   aber das kann ich gar nicht, mehrere abfragen so. mann. schlecht, mal todo besseren head parser machen. auf wantarray schauen um zu sehen ob undef oder multiple geben.
+			#if (my $xloop= $self->maybe_header("X-Loop")) { hm dumm ist dass bereits in meinem fall tatsächlich mehrere drin sind.
+			#} else {
+			#	warn "kein X-Loop maybe_header (oder mehrere) drin";
+			#}
+			my @xloop= $self->headers("X-Loop");
+			my $xloop= do {
+			    if (@xloop >=2) {
+				my @xloopn= grep { ! /^[^\@]*\bowner\b/i } @xloop;
+				#warn "xloops ohne owner: ".join(", ",@xloopn);
+				if (@xloopn) {
+				    @xloop= @xloopn;
+				    #warn "since we still had one, this is now assigned to xloop";
+				}
+			    }
+			    $xloop[-1]
+			};
+			if (defined $xloop) {
+			    $id= chompspace pick_out_of_anglebrackets_or_original $xloop;
+			    ##Frage: warum hatte compiler nöd reklamiert über undef methode? aber runtime?
+			    #warn "ok X-Loop maybe_header drin: id isch nun $id";
+			    last SEARCH;
+			} else {
+			    #warn "kein X-Loop maybe_header drin";
+			}
+		    } else {
+			last SEARCH;##frage gibt das ein warning wegen leave mehrere schritte? nah doch nid
+		    }
 		}
+		#warn "still in Resent-From check, id is ".(defined($id)? "'$id'": "undef");
+		#warn "id=$id";  wie kann das undef sein????--> mann blind auf beiden Augen
+		# cj 12.12.04: weil neuerdings eine email reinkam mit Resent-From: Hideki Yamane <henrich@samba.gr.jp> (== From) vom Debian BTS, und X-Loop: mysql@packages.qa.debian.org (vorsicht mehrere X-Loop headers sind in andern mails möglich), das noch prüfen:
+		# ----> NACH OBEN
+	    }#/RESENT
+	    # lugs: (mail alt dings)
+	    if ($value= $self->maybe_header("sender")
+		and $value=~ /^owner-(.*)/si) {
+		$id=$1;
+		last SEARCH;
 	    }
 	}
 	#warn "not a list mail";
@@ -333,7 +348,8 @@ sub is_spam {
     }
 }
 
-sub maybe_spamscore {#ps. like is_spam: what if multiple spamchecks were done?
+sub maybe_spamscore {
+    # ps. like is_spam: what if multiple spamchecks were done?
     my $self=shift;
     if (my $status=$self->maybe_first_header("X-Spam-Status")) {
 	if ($status=~ /score=(-?\d+(?:\.\d+)?)/){
@@ -351,8 +367,8 @@ sub maybe_spamscore {#ps. like is_spam: what if multiple spamchecks were done?
 sub is_autoreply {
     my $self=shift;
     my $score=0;
-    if (my $precedence= $self->maybe_precedence) {
-	$score+= 1 if $precedence eq "junk";
+    if ($self->is_junk_precedence) {
+	$score+= 1
 	# XX not necessarily?, will see.
     }
     if (my $subject= $self->maybe_decoded_header("subject")) {
@@ -373,4 +389,5 @@ sub is_autoreply {
     $score >= 1
 }
 
-1
+
+_END_
