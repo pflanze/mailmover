@@ -393,7 +393,9 @@ sub conditional_move_file($ $ ) {
 	    if ($from) {
 		if (is_own_emailaddress($from)) {
 		    save_is_own($mail);
-		} elsif (is_reply($mail)){
+		} elsif (is_reply($mail) and not $mail->is_autoreply){
+		    # ^ XX this is *so* hacky, the decision tree
+		    # should be purely in Mailmover::Lib
 		    writewarnmail(__("Reply").": $quotedsubject",
 				  __("A followup to your email")."\n".
 				  __("     From")." $quotedfrom\n".
