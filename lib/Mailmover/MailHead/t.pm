@@ -38,6 +38,30 @@ TEST { array_map the_method ("maybe_decoded_header","subject"), $heads }
    "Just landed, your business\n\treport for the past month" # hm, really? 'decoded'?
   ];
 
+TEST { array_map the_method ("maybe_spamscore"), $heads }
+  [
+   '2.8',
+   '-8.8'
+  ];
+
+TEST { array_map the_method ("is_spam"), $heads }
+  [
+   '',
+   ''
+  ];
+
+TEST { array_map the_method ("is_autoreply"), $heads }
+  [
+   '',
+   ''
+  ];
+
+TEST { array_map the_method ("maybe_mailinglist_id"), $heads }
+  [
+   undef,
+   undef
+  ];
+
 #use Chj::repl;repl;
 
 1
