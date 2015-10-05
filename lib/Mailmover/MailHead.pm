@@ -26,7 +26,6 @@ use strict; use warnings FATAL => 'uninitialized';
 
     use FP::Struct
       [
-       [*is_natural0, 'index'],
        [*is_string, 'name'],
        [*is_string, 'value']
       ];
@@ -56,8 +55,6 @@ use FP::Ops qw(the_method);
 use FP::Struct
   [
    [*is_purearray, 'errors'],
-   #[*is_purearray, 'warnings'],
-   #[*is_purearray, '_headers'],       # all lines of the head
    [*is_hash, '_headers_by_name'], # hash_of purearray_of *is_header
   ];
 
@@ -66,7 +63,7 @@ sub new_from_fh {
     my $class=shift;
     my ($fh)=@_; # assume this is blessed to Chj::IO::File and rewound
 
-    my (@errors,@warnings,@headers,%headers);
+    my (@errors,%headers);
     my ($lastheaderkey);
   HEADER:{
 	local $_;
@@ -75,12 +72,10 @@ sub new_from_fh {
 	    if (length) {
 		if (/^(\w[\w.-]+): *(.*)/) {
 		    $lastheaderkey=lc($1);
-		    push @headers,$_;
-		    my $v= Mailmover::MailHead::Header->new($#headers,$1,$2);
+		    my $v= Mailmover::MailHead::Header->new($1,$2);
 		    push @{$headers{$lastheaderkey}}, $v;
 		} elsif (/^\s+(.*)/) {
 		    if ($lastheaderkey) {
-			$headers[-1].="\n\t$1";
 			if (my $rf= $headers{$lastheaderkey}[-1]) {
 			    $$rf{value}.="\n\t$1"
 			} else {
@@ -105,8 +100,6 @@ sub new_from_fh {
     for (values %headers) { unsafe_array_to_purearray $_ }
 
     $class->new_(errors=> unsafe_array_to_purearray(\@errors),
-		 #warnings=> unsafe_array_to_purearray(\@warnings),
-		 #_headers=> unsafe_array_to_purearray(\@headers),
 		 _headers_by_name=> \%headers)
 }
 
