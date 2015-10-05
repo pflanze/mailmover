@@ -341,7 +341,7 @@ sub is_spam {
 	if ($status=~ /^\s*yes\b/si) {
 	    return 1;
 	} else {
-	    return 0;
+	    return '';
 	}
     } else {
 	return undef
