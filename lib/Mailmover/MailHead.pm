@@ -46,7 +46,7 @@ use Chj::Encode::Permissive 'encode_permissive';
 use Chj::chompspace;
 use Mailmover::MailUtil qw(pick_out_of_anglebrackets_or_original);
 use FP::PureArray qw(is_purearray unsafe_array_to_purearray);
-use FP::List qw(null);
+use FP::List qw(null is_null);
 use FP::Predicates;
 use FP::Show;
 use FP::Ops qw(the_method);
@@ -58,8 +58,6 @@ use FP::Struct
    [*is_purearray, 'errors'],
    #[*is_purearray, 'warnings'],
    #[*is_purearray, '_headers'],       # all lines of the head
-   [*is_hash, '_header_by_name'],  # hash_of *is_header, only single
-                                   # headers; XX why?
    [*is_hash, '_headers_by_name'], # hash_of purearray_of *is_header
   ];
 
@@ -68,7 +66,7 @@ sub new_from_fh {
     my $class=shift;
     my ($fh)=@_; # assume this is blessed to Chj::IO::File and rewound
 
-    my (@errors,@warnings,%header,@headers,%headers);
+    my (@errors,@warnings,@headers,%headers);
     my ($lastheaderkey);
   HEADER:{
 	local $_;
@@ -78,20 +76,11 @@ sub new_from_fh {
 		if (/^(\w[\w.-]+): *(.*)/) {
 		    $lastheaderkey=lc($1);
 		    push @headers,$_;
-		    # Always keep the *last* header with same name in
-		    # %header.  This way, multi-line build up is still
-		    # correct.  Have to check in (with?)
-		    # ->maybe_header() method if multiple.
-		    push @{$headers{$lastheaderkey}},
-		      Mailmover::MailHead::Header->new($#headers,$1,$2);
-		    $header{$lastheaderkey}=
-		      Mailmover::MailHead::Header->new($#headers,$1,$2);
-		    # XXX^ why not reuse the same object??
+		    my $v= Mailmover::MailHead::Header->new($#headers,$1,$2);
+		    push @{$headers{$lastheaderkey}}, $v;
 		} elsif (/^\s+(.*)/) {
 		    if ($lastheaderkey) {
 			$headers[-1].="\n\t$1";
-			$header{$lastheaderkey}{value}.="\n\t$1"
-			  if defined $header{$lastheaderkey};
 			if (my $rf= $headers{$lastheaderkey}[-1]) {
 			    $$rf{value}.="\n\t$1"
 			} else {
@@ -118,7 +107,6 @@ sub new_from_fh {
     $class->new_(errors=> unsafe_array_to_purearray(\@errors),
 		 #warnings=> unsafe_array_to_purearray(\@warnings),
 		 #_headers=> unsafe_array_to_purearray(\@headers),
-		 _header_by_name=> \%header,
 		 _headers_by_name=> \%headers)
 }
 
@@ -133,23 +121,37 @@ sub new_from_path {
 }
 
 
-sub maybe_header {
+# call this 'headers_by_name'? but then, that would really suggest to
+# return the Mailmover::MailHead::Header objects. XX stupid.
+sub headers {
     my $self=shift;
     my ($name)=@_;
-    if (defined(my $h=$$self{_header_by_name}{lc($name)})) {
-	if (@{ $$self{_headers_by_name}{lc $name} } > 1) {
-	    warn "maybe_header method called where multiple "
-	      ."headers of key '$name' exists";
-	    return undef
-	}
+    if (defined (my $l= $$self{_headers_by_name}{lc $name})) {
 	# Don't return header values with space at the end, since
 	# that would/may lead to things like creation of folders
 	# ending in spaces and then some programs won't handle
 	# them correctly (e.g. squirrelmail/courier-imap). Is this
 	# a HACK or a good idea?
-	$h->chompspace_value
+	$l->stream->map (the_method "chompspace_value")
     } else {
+	null
+    }
+}
+
+sub maybe_header {
+    my $self=shift;
+    my ($name)=@_;
+    my $hs= $self->headers($name);
+    if (is_null $hs) {
 	undef
+    } else {
+	if (is_null ($hs->rest)) {
+	    $hs->first
+	} else {
+	    warn "maybe_header method called where multiple "
+	      ."headers of key '$name' exists";
+	    undef
+	}
     }
 }
 
@@ -181,25 +183,13 @@ sub maybe_header_ignoringidenticalcopies {
     }
 }
 
-# call this 'headers_by_name'? but then, that would really suggest to
-# return the Mailmover::MailHead::Header objects. XX stupid.
-sub headers {
-    my $self=shift;
-    my ($name)=@_;
-    if (defined (my $l= $$self{_headers_by_name}{lc $name})) {
-	$l->stream->map (the_method "chompspace_value")
-    } else {
-	null
-    }
-}
-
 sub maybe_decoded_header {
     my $self=shift;
     my ($name,$as_charset)=@_;
-    if (defined(my $h=$$self{_header_by_name}{lc($name)})) {
+    if (defined(my $h= $self->maybe_header($name))) {
 	join("",
 	     map{ encode_permissive $_->[0],$_->[1],$as_charset }
-	     decode_mimewords($h->chompspace_value))
+	     decode_mimewords($h))
     } else {
 	undef
     }
