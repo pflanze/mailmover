@@ -19,22 +19,48 @@ package Mailmover::MailHead;
 
 use strict; use warnings FATAL => 'uninitialized';
 
+{
+    package Mailmover::MailHead::Header;
+    use FP::Predicates;
+    use Chj::chompspace;
+
+    use FP::Struct
+      [
+       [*is_natural0, 'index'],
+       [*is_string, 'name'],
+       [*is_string, 'value']
+      ];
+
+    sub chompspace_value {
+	my $s=shift;
+	chompspace $$s{value}
+    }
+
+    _END_
+}
+
+
+
 use MIME::Words 'decode_mimewords';
 use Chj::Encode::Permissive 'encode_permissive';
 use Chj::chompspace;
 use Mailmover::MailUtil qw(pick_out_of_anglebrackets_or_original);
-use FP::PureArray;
+use FP::PureArray qw(is_purearray unsafe_array_to_purearray);
+use FP::List qw(null);
 use FP::Predicates;
 use FP::Show;
+use FP::Ops qw(the_method);
+
+*is_header= instance_of "Mailmover::MailHead::Header";
 
 use FP::Struct
   [
-   [*is_array, 'errors'],
-   [*is_array, 'warnings'], # hm unused?
-   [*is_hash, 'headersHash'],   # only single headers
-   [*is_array, 'headersArray'], # all headers
-   [*is_hash, 'headerSHash'],   # hash_of(*is_array), of all
-				# headers of the same key
+   [*is_purearray, 'errors'],
+   #[*is_purearray, 'warnings'],
+   #[*is_purearray, '_headers'],       # all lines of the head
+   [*is_hash, '_header_by_name'],  # hash_of *is_header, only single
+                                   # headers; XX why?
+   [*is_hash, '_headers_by_name'], # hash_of purearray_of *is_header
   ];
 
 
@@ -56,15 +82,18 @@ sub new_from_fh {
 		    # %header.  This way, multi-line build up is still
 		    # correct.  Have to check in (with?)
 		    # ->maybe_header() method if multiple.
-		    push @{$headers{$lastheaderkey}}, [$#headers,$1,$2];
-		    $header{$lastheaderkey}= [$#headers,$1,$2];
+		    push @{$headers{$lastheaderkey}},
+		      Mailmover::MailHead::Header->new($#headers,$1,$2);
+		    $header{$lastheaderkey}=
+		      Mailmover::MailHead::Header->new($#headers,$1,$2);
+		    # XXX^ why not reuse the same object??
 		} elsif (/^\s+(.*)/) {
 		    if ($lastheaderkey) {
 			$headers[-1].="\n\t$1";
-			$header{$lastheaderkey}[2].="\n\t$1"
+			$header{$lastheaderkey}{value}.="\n\t$1"
 			  if defined $header{$lastheaderkey};
 			if (my $rf= $headers{$lastheaderkey}[-1]) {
-			    $$rf[2].="\n\t$1"
+			    $$rf{value}.="\n\t$1"
 			} else {
 			    warn "bug?"
 			};
@@ -83,11 +112,14 @@ sub new_from_fh {
 	# no guarantee that a mail has a body at all (not even the
 	# empty line inbetween), so it's not an error.
     }
-    $class->new_(errors=> \@errors,
-		 warnings=> \@warnings,
-		 headersHash=> \%header,
-		 headersArray=> \@headers,
-		 headerSHash=> \%headers)
+
+    for (values %headers) { unsafe_array_to_purearray $_ }
+
+    $class->new_(errors=> unsafe_array_to_purearray(\@errors),
+		 #warnings=> unsafe_array_to_purearray(\@warnings),
+		 #_headers=> unsafe_array_to_purearray(\@headers),
+		 _header_by_name=> \%header,
+		 _headers_by_name=> \%headers)
 }
 
 sub new_from_path {
@@ -103,11 +135,11 @@ sub new_from_path {
 
 sub maybe_header {
     my $self=shift;
-    my ($key)=@_;
-    if (defined(my $h=$$self{headersHash}{lc($key)})) {
-	if (@{ $$self{headerSHash}{lc $key} } > 1) {
+    my ($name)=@_;
+    if (defined(my $h=$$self{_header_by_name}{lc($name)})) {
+	if (@{ $$self{_headers_by_name}{lc $name} } > 1) {
 	    warn "maybe_header method called where multiple "
-	      ."headers of key '$key' exists";
+	      ."headers of key '$name' exists";
 	    return undef
 	}
 	# Don't return header values with space at the end, since
@@ -115,7 +147,7 @@ sub maybe_header {
 	# ending in spaces and then some programs won't handle
 	# them correctly (e.g. squirrelmail/courier-imap). Is this
 	# a HACK or a good idea?
-	chompspace($h->[2]);
+	$h->chompspace_value
     } else {
 	undef
     }
@@ -123,47 +155,51 @@ sub maybe_header {
 
 sub maybe_first_header {
     my $s=shift;
-    ($s->headers(@_))[0]
+    my ($name)=@_;
+    $s->headers($name)->maybe_first
 }
 
 sub maybe_header_ignoringidenticalcopies {
     my $s=shift;
-    my ($key)=@_;
-    if (my @v= $s->headers($key)) {
-	if (@v > 1) {
-	    my $first= shift @v;
-	  CHECK: {
-		for (@v) {
-		    if ($_ ne $first) {
-			warn("maybe_header_ignoringidenticalcopies('$key'):"
-			     ." multiple headers of key with *different* "
-			     ."values exist");
-			last CHECK;
-		    }
-		}
-	    }
-	}
-	$v[0]
+    my ($name)=@_;
+    my $hs= $s->headers($name);
+    if (my ($first)= $hs->perhaps_first) {
+	$hs->rest->any
+	  (sub {
+	       if ($_ ne $first) {
+		   warn("maybe_header_ignoringidenticalcopies('$name'):"
+			." multiple headers of key with *different* "
+			."values exist");
+		   1 # last check
+	       } else {
+		   0
+	       }
+	   });
+	$first
     } else {
 	undef
     }
 }
 
+# call this 'headers_by_name'? but then, that would really suggest to
+# return the Mailmover::MailHead::Header objects. XX stupid.
 sub headers {
     my $self=shift;
-    my ($key)=@_;
-    map {
-	chompspace($_->[2]);
-    } @{ $$self{headerSHash}{lc $key} }
+    my ($name)=@_;
+    if (defined (my $l= $$self{_headers_by_name}{lc $name})) {
+	$l->stream->map (the_method "chompspace_value")
+    } else {
+	null
+    }
 }
 
 sub maybe_decoded_header {
     my $self=shift;
-    my ($key,$as_charset)=@_;
-    if (defined(my $h=$$self{headersHash}{lc($key)})) {
+    my ($name,$as_charset)=@_;
+    if (defined(my $h=$$self{_header_by_name}{lc($name)})) {
 	join("",
 	     map{ encode_permissive $_->[0],$_->[1],$as_charset }
-	     decode_mimewords(chompspace($h->[2])));
+	     decode_mimewords($h->chompspace_value))
     } else {
 	undef
     }
@@ -173,20 +209,20 @@ sub maybe_decoded_header {
 # does not belong into base package anymore:
 
 
-sub precedence_purearray {
+sub precedence_stream {
     my $self=shift;
-    purearray
-      (map {
-	  my $precedence= lc($_);
+    $self->headers("precedence")->map
+      (sub {
+	  my $precedence= lc($_[0]);
 	  $precedence=~ s/^\s+//s;
 	  $precedence=~ s/\s+\z//s;
 	  $precedence
-      } $self->headers("precedence"));
+      });
 }
 
 sub is_list_precedence {
     my $self=shift;
-    $self->precedence_purearray->any
+    $self->precedence_stream->any
       (sub {
 	   $_[0] eq "bulk" or $_[0] eq "list"
        });
@@ -194,7 +230,7 @@ sub is_list_precedence {
 
 sub is_junk_precedence {
     my $self=shift;
-    $self->precedence_purearray->any
+    $self->precedence_stream->any
       (sub {
 	   $_[0] eq "junk"
        });
@@ -291,7 +327,7 @@ sub maybe_mailinglist_id {
 			#} else {
 			#	warn "kein X-Loop maybe_header (oder mehrere) drin";
 			#}
-			my @xloop= $self->headers("X-Loop");
+			my @xloop= $self->headers("X-Loop")->values; # XX simplify w FP?
 			my $xloop= do {
 			    if (@xloop >=2) {
 				my @xloopn= grep { ! /^[^\@]*\bowner\b/i } @xloop;

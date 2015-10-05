@@ -62,6 +62,13 @@ TEST { array_map the_method ("maybe_mailinglist_id"), $heads }
    undef
   ];
 
+TEST { array_map the_method ("maybe_header_ignoringidenticalcopies", "precedence"),
+	 $heads }
+  [
+   undef,
+   undef
+  ];
+
 #use Chj::repl;repl;
 
 1
