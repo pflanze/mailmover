@@ -462,9 +462,10 @@ sub conditional_move_file($ $ ) {
     } || do {
 	if ($DEBUG) {
 	    die $@
+	} else {
+	    push @warns, __("Error/exception:\n").$@;
 	}
     };
-    push @warns, __("Error/exception:\n").$@ if $@;
 
     if (@warns) {
 	writewarnmail(__("Warnings for email")." $quotedsubject",
