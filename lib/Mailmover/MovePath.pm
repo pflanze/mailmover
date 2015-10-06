@@ -31,7 +31,7 @@ use strict; use warnings FATAL => 'uninitialized';
 
     sub is_movepath_array {
 	my ($v)=@_;
-	is_array $v and @$v and do {
+	is_array $v and do {
 	    for (@$v) {
 		length $_ or return ''
 	    }
@@ -75,6 +75,11 @@ use strict; use warnings FATAL => 'uninitialized';
 	my ($a,$b)=@_;
 	UNIVERSAL::isa($b, "Mailmover::MovePath::MovePath") or die "wrong type of $b";
 	$a->items_set(array_append ($a->items, $b->items))
+    }
+
+    sub is_inbox {
+	my $s=shift;
+	not @{$s->items}
     }
 
     _END_
