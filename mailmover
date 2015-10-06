@@ -72,7 +72,6 @@ sub usage {
   -d|--dir  path      take all files inside sourcedir
   -f|--files  files   take given files
   --stdin             read mail from stdin
-  --leave-inbox       xxx
   -l|--loop-every n   keep running: sleep n seconds then scan again.
   --repeat n          only loop n times, then end. (to prevent memoryleaks from becoming awful, or for test runs with Devel::LeakTrace)
 
@@ -94,7 +93,6 @@ my $DEBUG=0;
 my $verbose=0;
 my ($sourcedir);
 my ($opt_config,
-    $opt_leaveinbox,
     $opt_loop,
     $opt_repeat,
     $opt_is_ham,
@@ -130,8 +128,6 @@ for (my $i=0; $i<=$#ARGV; $i++) {
 	$opt_loop or usage "missing argument for '$_' option";
     } elsif (/^--?d(ebug)?$/) {
 	$DEBUG=1;
-    } elsif (/^--leave-inbox$/) {
-	$opt_leaveinbox=1;
     } elsif (/^--repeat(?:=(.*))?$/) {
         if (defined $1) {
             $opt_repeat=$1
@@ -261,33 +257,26 @@ sub conditional_move_file($ $ ) {
     my $quotedfolderpath;
     $quotedfrom=$quotedfolderpath= Lazy { "(abgebrochen bevor geholt)" };
     WithRepl_eval {
-	my ($mail,$folderpath,$type,$important)=
+	my ($mail,$folderpath,$important)=
 	  analyze_file ($filepath, undef, $opt_is_ham);
 	$quotedsubject= Lazy { singlequote($mail->maybe_decoded_header("subject"),
 					   "(kein subject)") };
 	$from=$mail->maybe_decoded_header("From");
 	$quotedfrom= Lazy { singlequote $from };
-	$quotedfolderpath= Lazy { singlequote ($folderpath->string ($targetbase)) };
+	$quotedfolderpath= Lazy { singlequote ($folderpath->maybe_string ($targetbase)) };
 
 	my $targetfolder_is_symlink;
 	if ($folderpath) {
 	    if ($opt_maildirs) {
+
 		my $make_sub= sub {
 		    my ($folderpath, $flag_sourceforge_original)=@_;
-		    if ($folderpath->string($targetbase) eq "inbox"
-			#or
-			#$folderpath->string($targetbase) eq "inbox-big"
-		       ) {
+		    if ($folderpath->is_inbox) {
 			$maildirbasefolder
 		    } else {
-			# hacky / should be an option?
-			$type="" if $type eq "unbekannt";
-			my @perhaps_type= length($type) ? $type : ();
 			$folderpath=
-			  ($flag_sourceforge_original ?
-			   MovePath("Z", @perhaps_type, "original")
-			   : MovePath ("Z", @perhaps_type)) ->append($folderpath);
-			#/hacky
+			  MovePath ("Z", $flag_sourceforge_original ? "original" : ())
+			    ->append($folderpath);
 			my @pathparts= $folderpath->maildirsubfolder_segments($targetbase);
 			my $sub= $maildirbasefolder;
 			for (@pathparts) {
@@ -298,18 +287,20 @@ sub conditional_move_file($ $ ) {
 			  and warn (__("created new folder:")
 				    ." $quotedfolderpath\n");
 			# Instead send specialized notification
-			# message? But that's bad for testing. Instead
-			# detect specially in warning handler?
+			# message? But that's bad for testing--well, not
+			# anymore.
 			$sub
 		    }
 		};
+
 		my $deliver= sub {
 		    my ($filepath,$sub,$maybe_filename)=@_;
 		    $sub->deliver_file
 		      ($filepath,
 		       $maybe_filename || Maybe_take_filename($filepath));
 		};
-		if ($type eq "sourceforge") {
+
+		if (($folderpath->maybe_first_segment//"") eq "sourceforge") {
 		    &$deliver($filepath,  &$make_sub($folderpath, 1));
 
 		    # isnt't it HACKY: in mailmoverlib I've got the
@@ -364,7 +355,7 @@ sub conditional_move_file($ $ ) {
 		}
 		xunlink $filepath;
 	    } else {
-		my $targetfolder= $targetbase . "/" . $folderpath->string($targetbase);
+		my $targetfolder= $targetbase . "/" . $folderpath->maybe_string($targetbase);
 		if (! -d $targetfolder) {
 		    xmkdir $targetfolder;
 		    warn __("created new folder:")." '$targetfolder'\n";
@@ -389,7 +380,7 @@ sub conditional_move_file($ $ ) {
 	# replies will likely be filtered too):
 
 	my $already_warned;
-	if ($type ne 'inbox') {
+	if (not $folderpath->is_inbox) {
 	    if ($from) {
 		if (is_own_emailaddress($from)) {
 		    save_is_own($mail);
@@ -408,7 +399,7 @@ sub conditional_move_file($ $ ) {
 	}
 	if ($important and !$already_warned){
 	    writewarnmail
-	      (($folderpath->string($targetbase)=~/inbox-big/ ?
+	      ((($folderpath->maybe_first_segment//"") eq "inbox-big" ?
 		__("Big") : __("Important"))
 	       .": $quotedsubject",
 
@@ -422,10 +413,7 @@ sub conditional_move_file($ $ ) {
 	# send autoreply:
 
 	if ($do_send_autoreply) {
-	    # $type eq 'inbox' is not enough, includes Cron mails? or similar.
-	    # XX what is $type really for now?
-	    my $str= $folderpath->string($targetbase);
-	    if ($str eq 'inbox' or $str eq 'inbox-big') {
+	    if ($folderpath->is_inbox or ($folderpath->maybe_first_segment//"") eq 'inbox-big') {
 		# make sure it is a manual, direct send (not mailing
 		# list, bulk sending, auto-responder..)
 

@@ -48,7 +48,6 @@ my $ownsubjects_base="$HOME/.mailmover_ownsubjects";
 mkdir $msgid_base,0700;
 mkdir $ownmsgid_base,0700;
 mkdir $ownsubjects_base,0700;
-our $opt_leaveinbox;
 
 my $BUFSIZE=50000;
 
@@ -64,8 +63,7 @@ sub analyze_file($;$$) {
     my $f= xopen_read $filepath;
     my $head= Mailmover::MailHead->new_from_fh($f);
 
-    my ($folderpath,$type,$important);
-    $type="unbekannt";
+    my ($folderpath,$important);
 
     my $is_spam= $is_ham ? 0 : $head->is_spam;
     if ($is_spam) {
@@ -90,7 +88,7 @@ sub analyze_file($;$$) {
 		and
 		$from=~ /^mailman-owner\@/
 	       ) {
-		$folderpath= MovePath "mailinglistmembershipreminders";#$type="list";oder toplevel
+		$folderpath= MovePath "mailinglistmembershipreminders";
 	    }
 	}
     }
@@ -110,7 +108,7 @@ sub analyze_file($;$$) {
 	    if ($list=~ /debian-security-announce/i) {
 		$important=1;
 	    }
-	    $folderpath= MovePath $list; $type="list";
+	    $folderpath= MovePath "list", $list;
 	}
     }
 
@@ -119,18 +117,18 @@ sub analyze_file($;$$) {
 	if (my $subject= $head->maybe_decoded_header("subject")) {
 	    # system mails
 	    if ($subject=~ /^([a-zA-Z][\w-]+)\s+\d+.*\d system check\s*\z/) {
-		$folderpath= MovePath "systemcheck-$1";$type="system";
+		$folderpath= MovePath "system", "systemcheck-$1";
 		##ps.punkte dürfen in maildir foldernamen dann nicht vorkommen. weils separatoren sind. quoting möglich? in meiner library dann.
 	    } elsif ($subject eq 'DEBUG') {
-		$folderpath= MovePath "DEBUG";$type="system";
+		$folderpath= MovePath "system", "DEBUG";
 	    } else {
 		my $tmp; # instead of relying on $1 too long
 		if ($subject=~ /^\[LifeCMS\]/
 		    and ( $from eq 'alias@ethlife.ethz.ch'
 			  or $from eq 'newsletter@ethlife.ethz.ch') ) {
-		    $folderpath= MovePath $subject;$type="system";#gefährlich? jaaaa war es!!! jetzt hab ich unten geflickt.
+		    $folderpath= MovePath "system", $subject;
 		} elsif ($subject=~ /^Cron/ and $from=~ /Cron Daemon/) {
-		    $folderpath= MovePath $subject;$type="system";
+		    $folderpath= MovePath "system", $subject;
 		} elsif ($subject=~ /^Delivery Status Notification/
 			 and $from=~ /^postmaster/) {
 		    $folderpath= MovePath "BOUNCE";
@@ -166,13 +164,13 @@ sub analyze_file($;$$) {
  			 }) {
 		    # filtered. else go on in other elsifs
 		} elsif ($from=~ /GMX Magazin <mailings\@gmx/) {
-		    $folderpath= MovePath "GMX Magazin"; $type="list";
+		    $folderpath= MovePath "list", "GMX Magazin";
 		} elsif ($from=~ /GMX Spamschutz.* <mailings\@gmx/) {
-		    $folderpath= MovePath "GMX Spamschutz"; $type="list";
+		    $folderpath= MovePath "list", "GMX Spamschutz";
 		}
 		# cj 3.12.04 ebay:
 		elsif ($from=~ /\Q<newsletter_ch\@ebay.com>\E/) {
-		    $folderpath= MovePath "ebay-newsletter";# $type="list"; oder "unbekannt" lassen? frage an ct: welche typen gibt es und wie werden sie sonst gehandhabt, resp. ändere es hier einfach selber ab, ich benutze type derzeit eh nicht.
+		    $folderpath= MovePath "ebay-newsletter";
 		}
 		# sourceforge:
 		elsif (do {
@@ -184,8 +182,7 @@ sub analyze_file($;$$) {
 		    )
 		}) {
 		    #warn "yes, sourceforge";
-		    $folderpath= MovePath $tmp;
-		    $type= "sourceforge";
+		    $folderpath= MovePath "sourceforge", $tmp;
 		}
 	    }
 	}
@@ -243,13 +240,13 @@ sub analyze_file($;$$) {
 	# connections
 	my $s= xstat $filepath;
 	if ($s->size > 5000000) {
-	    $folderpath= MovePath "inbox-big";$type="inbox";$important=1;
+	    $folderpath= MovePath "inbox-big";$important=1;
 	} else {
-	    $folderpath= MovePath "inbox" unless $opt_leaveinbox;$type="inbox";
+	    $folderpath= MovePath (); # inbox
 	}
     }
 
-    ($head,$folderpath,$type,$important);
+    ($head,$folderpath,$important);
 }
 
 
