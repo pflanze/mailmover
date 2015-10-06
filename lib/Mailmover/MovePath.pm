@@ -61,7 +61,7 @@ use strict; use warnings FATAL => 'uninitialized';
 	$truncator->trunc($s->untruncated_string)
     }
 
-    sub string_split {
+    sub maildirsubfolder_segments {
 	@_==2 or die "wrong number of arguments";
 	my ($s, $targetbase)=@_;
 	# sounds stupid first to stringify then split again, but,

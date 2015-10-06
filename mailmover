@@ -288,7 +288,7 @@ sub conditional_move_file($ $ ) {
 			   MovePath("Z", @perhaps_type, "original")
 			   : MovePath ("Z", @perhaps_type)) ->append($folderpath);
 			#/hacky
-			my @pathparts= $folderpath->string_split($targetbase);
+			my @pathparts= $folderpath->maildirsubfolder_segments($targetbase);
 			my $sub= $maildirbasefolder;
 			for (@pathparts) {
 			    next unless length;
