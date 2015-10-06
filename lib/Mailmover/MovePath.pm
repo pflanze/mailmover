@@ -52,13 +52,15 @@ use strict; use warnings FATAL => 'uninitialized';
 	    } @{$s->items};
     }
 
-    sub string {
+    sub maybe_string {
 	@_==2 or die "wrong number of arguments";
 	my ($s, $targetbase)=@_;
-	my $truncator= Chj::Path::Truncator::MD5->new($targetbase,3);
-	# XX: not totally safe as it might truncate away a folder
-	# boundary if parent folders are long!
-	$truncator->trunc($s->untruncated_string)
+	$s->is_inbox ? undef : do {
+	    my $truncator= Chj::Path::Truncator::MD5->new($targetbase,3);
+	    # XX: not totally safe as it might truncate away a folder
+	    # boundary if parent folders are long!
+	    $truncator->trunc($s->untruncated_string)
+	}
     }
 
     sub maildirsubfolder_segments {
@@ -67,7 +69,7 @@ use strict; use warnings FATAL => 'uninitialized';
 	# sounds stupid first to stringify then split again, but,
 	# proper escaping is being done this way (only?) *and
 	# especially truncation*.
-	split /\//, $s->string ($targetbase)
+	split /\//, $s->maybe_string ($targetbase)
     }
 
     sub append {
