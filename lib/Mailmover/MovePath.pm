@@ -82,6 +82,11 @@ use strict; use warnings FATAL => 'uninitialized';
 	not @{$s->items}
     }
 
+    sub maybe_first_segment {
+	my $s=shift;
+	${$s->items}[0]
+    }
+
     _END_
 }
 
