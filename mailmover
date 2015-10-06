@@ -426,41 +426,26 @@ sub conditional_move_file($ $ ) {
 	    # XX what is $type really for now?
 	    my $str= $folderpath->string($targetbase);
 	    if ($str eq 'inbox' or $str eq 'inbox-big') {
-		# Can we be sure that no mail with bulk header
-		# (autoreplies etc.) makes it here? No, if it isn't
-		# any of the %known_list_precedences (well
-		# irrelevant?), or resent-from is missing and isn't
-		# sender owner-xyz then it would not be filtered even
-		# though it has precedence header. Thus check
-		# explicitely here:
-		if (do {
-		    if (my $precedence= $mail->maybe_header("precedence")) {
-			$precedence= lc $precedence;
-			if ($precedence eq 'bulk'
-			    or
-			    $precedence eq 'list') {
-			    1
-			} elsif ($precedence eq 'junk') {
-			    1
-			} else {
-			    0
-			}
-		    } else {
-			0
-		    }
-		}) {
+		# make sure it is a manual, direct send (not mailing
+		# list, bulk sending, auto-responder..)
+
+		# XX check resent-from, owner-xyz ? or are those
+		# guaranteed to be filtered earlier as mailing list
+		# mails already?
+
+		# Even after mailing list filtering, it's still
+		# possible to get precedence headers here.
+		if ($mail->is_list_precedence #  bulk, list
+		    or
+		    $mail->is_is_junk_precedence) {
 		    #warn "not filtered but still bulky email";
 		} else {
 		    # really not an autoreply?
 		    unless ($mail->is_autoreply) {
-			unless (do {
-			    if (defined(my $maybe_spamscore=$mail->maybe_spamscore)) {
-				$maybe_spamscore >= 0.5
-			    } else {
-				#(huh, a mail without spamscore?)
-				undef
-			    }
-			}) {
+			my $maybe_spamscore=$mail->maybe_spamscore;
+			if (defined $maybe_spamscore and $maybe_spamscore >= 0.5) {
+			    # don't auto-respond to possible spams
+			} else {
 			    my $senderaddress= $mail->maybe_decoded_header("from");
 			    # ^- but didn't I do extraction for sms already?
 			    autoreply::send_if_not_already
