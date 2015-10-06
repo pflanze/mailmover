@@ -34,7 +34,10 @@ sub exn (&) {
     }
 }
 
-TEST { exn { MovePath () } } 'unacceptable value for field \'items\'';
+TEST { MovePath ()->is_inbox } 1;
+TEST { MovePath ()->maybe_string ("Foo") } undef;
+TEST { exn { MovePath ("a")->is_inbox } } '';
+TEST { MovePath ("a.b")->maybe_string ("Foo") } 'a.b'; #XX hm not "Foo.a,b"; ?
 TEST { exn { MovePath ("") } } 'unacceptable value for field \'items\'';
 TEST { exn { MovePath ("a")->untruncated_string } } "a";
 TEST { exn { MovePath ("a","b")->untruncated_string } } "a/b";
