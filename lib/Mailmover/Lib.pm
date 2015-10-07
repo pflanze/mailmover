@@ -90,13 +90,18 @@ sub classify {
     }
 
     my $maybe_spamscore= $head->maybe_spamscore;
+    my $maybe_spamscore_old= $head->maybe_spamscore('X-Old-Spam-Status');
     my $is_possible_spam= (!$is_ham
 			   and defined($maybe_spamscore)
 			   and $maybe_spamscore > 0);
+    my $is_possible_spam_old= (!$is_ham
+			       and defined($maybe_spamscore_old)
+			       and $maybe_spamscore_old > 0);
 
     my $list= $head->maybe_mailinglist_id;
     if ($list) {
-	if ($is_possible_spam) {
+	# trust the spamfilter on list servers
+	if ($is_possible_spam or $is_possible_spam_old) {
 	    return normal MovePath "list", __("possible spam");
 	} else {
 	    warn "'$filename': mailinglist $list\n" if $DEBUG;

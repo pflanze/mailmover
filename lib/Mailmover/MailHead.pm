@@ -368,13 +368,15 @@ sub is_spam {
 }
 
 sub maybe_spamscore {
-    # ps. like is_spam: what if multiple spamchecks were done?
     my $self=shift;
-    if (my $status=$self->maybe_first_header("X-Spam-Status")) {
+    my ($maybe_headername)=@_; # e.g. 'X-Old-Spam-Status'
+    my $headername= $maybe_headername // "X-Spam-Status";
+    if (my $status=$self->maybe_first_header($headername)) {
 	if ($status=~ /score=(-?\d+(?:\.\d+)?)/){
 	    $1
 	} else {
-	    warn "maybe_spamscore: X-Spam-Status header found but no score match";
+	    warn "maybe_spamscore: $headername header found "
+	      ."but no score match";
 	    undef
 	}
     } else {
