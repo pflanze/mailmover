@@ -91,6 +91,11 @@ sub classify {
 
     my $maybe_spamscore= $head->maybe_spamscore;
     my $maybe_spamscore_old= $head->maybe_spamscore('X-Old-Spam-Status');
+    my $maybe_bayes_=
+      lazy {
+	  my $v= $head->maybe_first_header('X-Spam-Status');
+	  defined $v ? ($v=~ /BAYES_(\d+)/ ? $1 : undef) : undef
+      };
     my $is_possible_spam= (!$is_ham
 			   and defined($maybe_spamscore)
 			   and $maybe_spamscore > 0);
@@ -98,12 +103,19 @@ sub classify {
     my $list= $head->maybe_mailinglist_id;
     if ($list) {
 	# trust the spamfilter on list servers
-	if ($is_possible_spam or
-	    (!$is_ham
-	     and defined $maybe_spamscore
-	     and defined $maybe_spamscore_old
-	     # $maybe_spamscore is negative here
-	     and ($maybe_spamscore_old + 2*$maybe_spamscore) > 2.5)) {
+	if ($is_possible_spam) {
+	    return normal MovePath "list", __("possible spam");
+	} elsif (0 and
+		 !$is_ham
+		 and defined $maybe_spamscore
+		 and defined $maybe_spamscore_old
+		 and defined force ($maybe_bayes_)
+		 # $maybe_spamscore is negative here:
+		 and ($maybe_spamscore_old + 2*$maybe_spamscore) > 1.5
+		 # don't put to possible spam if we have BAYES_00 already:
+		 and not(force ($maybe_bayes_) > 0)
+		) {
+	    print STDERR "WE HAVE BAYES: ".force($maybe_bayes_)."\n";
 	    return normal MovePath "list", __("possible spam");
 	} else {
 	    warn "'$filename': mailinglist $list\n" if $DEBUG;
