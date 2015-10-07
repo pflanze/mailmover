@@ -67,7 +67,7 @@ sub normal ($) {
 }
 
 sub classify {
-    my ($filename, $is_ham, $f, $head, $get_size)=@_;
+    my ($filename, $is_ham, $f, $head, $size_, $content_)=@_;
 
     my $is_spam= $is_ham ? 0 : $head->is_spam;
     if ($is_spam) {
@@ -78,10 +78,6 @@ sub classify {
     }
 
     my $from= $head->maybe_header_ignoringidenticalcopies("from");
-    my $content;
-    my $messageid= lazy {
-	pick_out_of_anglebrackets($head->maybe_first_header("message-id"))
-    };
 
     if (my $subject= $head->maybe_decoded_header("subject")) {
 	# mailinglist reminders
@@ -127,8 +123,7 @@ sub classify {
 		     )
 		     # [siehe history fuer ethlife newsletter bounce (why war das?)]
 		     and do {
-			 $f->xread($content,$BUFSIZE);
-			 if ($content=~ /but the bounce bounced\! *\n *\n *<[^\n]*>: *\n *Sorry, no mailbox here by that name/s) {
+			 if (force($content_)=~ /but the bounce bounced\! *\n *\n *<[^\n]*>: *\n *Sorry, no mailbox here by that name/s) {
 			     # ^ the 'Sorry' check (or checking
 			     # the domain of the address) is
 			     # necessary to see that it tried to
@@ -220,7 +215,7 @@ sub classify {
 
     # check mail size, to avoid downloading big mails over mobile
     # connections
-    if (&$get_size() > 5000000) {
+    if (force($size_) > 5000000) {
 	return important MovePath "inbox-big"
     } else {
 	return normal MovePath (); # inbox
@@ -241,8 +236,15 @@ sub analyze_file($;$$) {
     my $head= Mailmover::MailHead->new_from_fh($f);
 
     my $classification= classify ($filename, $is_ham, $f, $head,
-				  sub {
+				  lazy {
 				      xstat ($filepath)->size
+				  },
+				  lazy {
+				      my $content;
+				      # XX could even be lazier by
+				      # using streams!
+				      $f->xread($content,$BUFSIZE);
+				      $content
 				  });
 
     ($head,
