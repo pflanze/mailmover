@@ -251,18 +251,17 @@ sub conditional_move_file($ $ ) {
 
     my $filename=$filepath; $filename=~ s{^.*/}{}s;
 
-    my $quotedsubject= Lazy { "(abgebrochen bevor subject geholt)" };
+
     my $from;
-    my $quotedfrom;
-    my $quotedfolderpath;
-    $quotedfrom=$quotedfolderpath= Lazy { "(abgebrochen bevor geholt)" };
+    my $quotedfrom= Lazy { singlequote $from };
+    my ($quotedsubject, $quotedfolderpath);
+    $quotedsubject=$quotedfolderpath= Lazy { "(abgebrochen bevor geholt)" };
     WithRepl_eval {
 	my ($mail,$folderpath,$important)=
 	  analyze_file ($filepath, undef, $opt_is_ham);
 	$quotedsubject= Lazy { singlequote($mail->maybe_decoded_header("subject"),
 					   "(kein subject)") };
 	$from=$mail->maybe_decoded_header("From");
-	$quotedfrom= Lazy { singlequote $from };
 	$quotedfolderpath= Lazy { singlequote ($folderpath->maybe_string ($targetbase)) };
 
 	my $targetfolder_is_symlink;
