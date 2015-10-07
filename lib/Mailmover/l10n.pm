@@ -61,6 +61,8 @@ our $translations=
     "possible spam"=> {en=> " possible spam", de=> " möglicher Spam"},
     "spam"=> {en=> " spam", de=> " Spam"},
     "auto-reply through list"=> {de=> "Auto-Reply durch Liste"},
+    "(stopped before retrieval)"=> {de=> "(abgebrochen bevor geholt)"},
+    "(no subject)"=> {de=> "(kein Subject)"},
    };
 
 sub __ ($) {

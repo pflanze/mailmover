@@ -255,12 +255,12 @@ sub conditional_move_file($ $ ) {
     my $from;
     my $quotedfrom= Lazy { singlequote $from };
     my ($quotedsubject, $quotedfolderpath);
-    $quotedsubject=$quotedfolderpath= Lazy { "(abgebrochen bevor geholt)" };
+    $quotedsubject=$quotedfolderpath= Lazy { __("(stopped before retrieval)") };
     WithRepl_eval {
 	my ($mail,$folderpath,$important)=
 	  analyze_file ($filepath, undef, $opt_is_ham);
 	$quotedsubject= Lazy { singlequote($mail->maybe_decoded_header("subject"),
-					   "(kein subject)") };
+					   __("(no subject)")) };
 	$from=$mail->maybe_decoded_header("From");
 	$quotedfolderpath= Lazy { singlequote ($folderpath->maybe_string ($targetbase)) };
 
@@ -402,7 +402,7 @@ sub conditional_move_file($ $ ) {
 		__("Big") : __("Important"))
 	       .": $quotedsubject",
 
-	       __("Email mit\n").
+	       __("Email with\n").
 	       __("     From")." $quotedfrom\n".
 	       __("  Subject")." $quotedsubject\n".
 	       __("has arrived in folder ").$quotedfolderpath
