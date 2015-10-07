@@ -104,24 +104,37 @@ sub classify {
     if ($list) {
 	# also use the spamfilter on list servers (trust it to be
 	# honest)
-	print STDERR "WE HAVE BAYES: ".force($maybe_bayes_)."\n"
-	  if defined force($maybe_bayes_);
-	if ($is_possible_spam
-	    # don't catch BAYES_00
-	    and defined force ($maybe_bayes_)
-	    and force($maybe_bayes_) > 0
-	   ) {
-	    return normal MovePath "list", __("possible spam");
-	} elsif (!$is_ham
-		 and defined $maybe_spamscore
-		 and defined $maybe_spamscore_old
-		 and defined force($maybe_bayes_)
-		 # $maybe_spamscore is negative here:
-		 and ($maybe_spamscore_old + 2*$maybe_spamscore) > 1
-		 # don't put to possible spam if we have BAYES_00 already:
-		 and force($maybe_bayes_) > 0
-		) {
-	    print STDERR "WE HAVE BAYES: ".force($maybe_bayes_)."\n";
+
+	# can't maybe_, since and chain may give '' right?
+	my $possible_spam_reason=
+	  (!$is_ham and defined $maybe_spamscore and do {
+	      my $spamscore= $maybe_spamscore;
+
+	      # some lists just seem to come with higher scores
+	      my $list_allowance=
+		($list=~ /spamassassin/ ? 2.5 :
+		 $list=~ /debian/ ? -1 :
+		 0);
+
+	      # for a list mail, allow higher scores (somehow SA finds
+	      # bad things in lists per se)
+	      if ($spamscore > (1 + $list_allowance)) {
+		  "high spamscore: spamscore[$spamscore] > (1 + list_allowance[$list_allowance])"
+	      } elsif (defined $maybe_spamscore_old and
+		       $spamscore <= 1 and
+		       (2*($spamscore-1) + $maybe_spamscore_old)
+		       > $list_allowance*2
+		      ) {
+		  "mix: (2*(spamscore[$spamscore]-1) + spamscore_old[$maybe_spamscore_old]) > list_allowance[$list_allowance]*2"
+	      } else {
+		  ''
+	      }
+	});
+	
+	if ($possible_spam_reason) {
+	    # XX?
+	    warn "reason for 'possible spam': $possible_spam_reason\n";
+	    #if $DEBUG;
 	    return normal MovePath "list", __("possible spam");
 	} else {
 	    warn "'$filename': mailinglist $list\n" if $DEBUG;
