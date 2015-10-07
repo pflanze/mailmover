@@ -265,10 +265,10 @@ sub conditional_move_file($ $ ) {
 	$quotedfolderpath= Lazy { singlequote ($folderpath->maybe_string ($targetbase)) };
 
 	my $targetfolder_is_symlink;
-	if ($folderpath) {
+	if ($folderpath) { # XX shouldn't this *always* be the case? even inbox is a FolderPath.
 	    if ($opt_maildirs) {
 
-		my $make_sub= sub {
+		my $make_subfolder= sub {
 		    my ($folderpath, $flag_sourceforge_original)=@_;
 		    if ($folderpath->is_inbox) {
 			$maildirbasefolder
@@ -300,7 +300,7 @@ sub conditional_move_file($ $ ) {
 		};
 
 		if (($folderpath->maybe_first_segment//"") eq "sourceforge") {
-		    &$deliver($filepath,  &$make_sub($folderpath, 1));
+		    &$deliver($filepath,  &$make_subfolder($folderpath, 1));
 
 		    # isnt't it HACKY: in mailmoverlib I've got the
 		    # head in memory anyway.
@@ -346,11 +346,11 @@ sub conditional_move_file($ $ ) {
 		    $in->xclose;
 		    $t->xclose;
 		    &$deliver($t->path,
-			      &$make_sub($folderpath, 0),
+			      &$make_subfolder($folderpath, 0),
 			      Maybe_take_filename($filepath));
 		} else {
 		    &$deliver($filepath,
-			      &$make_sub($folderpath, 0));
+			      &$make_subfolder($folderpath, 0));
 		}
 		xunlink $filepath;
 	    } else {
