@@ -51,17 +51,23 @@ mkdir $ownsubjects_base,0700;
 
 my $BUFSIZE=50000;
 
-sub analyze_file($;$$) {
-    # $maybe_filename is the filename of the file it will get in
-    # future in the maildir
-    my ($filepath, $maybe_filename, $is_ham)=@_;
+{
+    package Mailmover::Classification;
+    use FP::Predicates;
+    use FP::Struct [[instance_of("Mailmover::MovePath::MovePath"), "path"],
+		    [*is_boolean, "is_important"]];
+    _END_
+}
 
-    my $filename= $maybe_filename || do {
-	my $f=$filepath; $f=~ s{^.*/}{}s;
-	$f
-    };
-    my $f= xopen_read $filepath;
-    my $head= Mailmover::MailHead->new_from_fh($f);
+sub important ($) {
+    Mailmover::Classification->new($_[0], 1)
+}
+sub normal ($) {
+    Mailmover::Classification->new($_[0], 0)
+}
+
+sub classify {
+    my ($filename, $is_ham, $f, $head, $get_size)=@_;
 
     my ($folderpath,$important);
 
@@ -238,17 +244,39 @@ sub analyze_file($;$$) {
     if (!$folderpath) {
 	# check mail size, to avoid downloading big mails over mobile
 	# connections
-	my $s= xstat $filepath;
-	if ($s->size > 5000000) {
+	if (&$get_size() > 5000000) {
 	    $folderpath= MovePath "inbox-big";$important=1;
 	} else {
 	    $folderpath= MovePath (); # inbox
 	}
     }
 
-    ($head,$folderpath,$important);
+    Mailmover::Classification->new
+	($folderpath,$important);
 }
 
+
+sub analyze_file($;$$) {
+    # $maybe_filename is the filename of the file it will get in
+    # future in the maildir
+    my ($filepath, $maybe_filename, $is_ham)=@_;
+
+    my $filename= $maybe_filename || do {
+	my $f=$filepath; $f=~ s{^.*/}{}s;
+	$f
+    };
+    my $f= xopen_read $filepath;
+    my $head= Mailmover::MailHead->new_from_fh($f);
+
+    my $classification= classify ($filename, $is_ham, $f, $head,
+				  sub {
+				      xstat ($filepath)->size
+				  });
+
+    ($head,
+     $classification->path,
+     $classification->is_important)
+}
 
 sub _reduce { # testcase siehe lombi:~/perldevelopment/test/mailmoverlib/t1
     my ($str)=@_;
