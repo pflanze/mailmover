@@ -69,12 +69,10 @@ sub normal ($) {
 sub classify {
     my ($filename, $is_ham, $f, $head, $get_size)=@_;
 
-    my ($folderpath,$important);
-
     my $is_spam= $is_ham ? 0 : $head->is_spam;
     if ($is_spam) {
 	warn "'$filename' is spam\n" if $DEBUG;
-	$folderpath= MovePath __("spam");
+	return normal MovePath __("spam");
     } elsif (! defined $is_spam) {
 	warn "'$filename' is_spam: not scanned\n" if $verbose;
     }
@@ -87,137 +85,127 @@ sub classify {
 
     my $maybe_spamscore= $head->maybe_spamscore;
 
-    if (!$folderpath) {
-	if (my $subject= $head->maybe_decoded_header("subject")) {
-	    # mailinglist reminders
-	    if ($subject=~ /^\S+\s+mailing list memberships reminder\s*$/
-		and
-		$from=~ /^mailman-owner\@/
-	       ) {
-		$folderpath= MovePath "mailinglistmembershipreminders";
-	    }
+
+    if (my $subject= $head->maybe_decoded_header("subject")) {
+	# mailinglist reminders
+	if ($subject=~ /^\S+\s+mailing list memberships reminder\s*$/
+	    and
+	    $from=~ /^mailman-owner\@/
+	   ) {
+	    return normal MovePath "mailinglistmembershipreminders";
 	}
     }
 
-    if (!$folderpath) {
-	my $list= $head->maybe_mailinglist_id;
-	if (defined $list) {
-	    warn "'$filename': mailinglist $list\n" if $DEBUG;
-	} else {
-	    warn "'$filename': not a list mail\n" if $DEBUG;
-	}
-	#if (!$list and 0) {
-	#use Data::Dumper;
-	#print "head for $filepath:",Dumper($head);
-	#}
-	if ($list) {
-	    if ($list=~ /debian-security-announce/i) {
-		$important=1;
-	    }
-	    $folderpath= MovePath "list", $list;
-	}
+    my $list= $head->maybe_mailinglist_id;
+    if (defined $list) {
+	warn "'$filename': mailinglist $list\n" if $DEBUG;
+    } else {
+	warn "'$filename': not a list mail\n" if $DEBUG;
+    }
+    #if (!$list and 0) {
+    #use Data::Dumper;
+    #print "head for $filepath:",Dumper($head);
+    #}
+    if ($list) {
+	my $class=
+	  $list=~ /debian-security-announce/i ? *important : *normal;
+	return &$class (MovePath "list", $list);
     }
 
     # various subject checks
-    if (!$folderpath) {
-	if (my $subject= $head->maybe_decoded_header("subject")) {
-	    # system mails
-	    if ($subject=~ /^([a-zA-Z][\w-]+)\s+\d+.*\d system check\s*\z/) {
-		$folderpath= MovePath "system", "systemcheck-$1";
-		##ps.punkte dürfen in maildir foldernamen dann nicht vorkommen. weils separatoren sind. quoting möglich? in meiner library dann.
-	    } elsif ($subject eq 'DEBUG') {
-		$folderpath= MovePath "system", "DEBUG";
-	    } else {
-		my $tmp; # instead of relying on $1 too long
-		if ($subject=~ /^\[LifeCMS\]/
-		    and ( $from eq 'alias@ethlife.ethz.ch'
-			  or $from eq 'newsletter@ethlife.ethz.ch') ) {
-		    $folderpath= MovePath "system", $subject;
-		} elsif ($subject=~ /^Cron/ and $from=~ /Cron Daemon/) {
-		    $folderpath= MovePath "system", $subject;
-		} elsif ($subject=~ /^Delivery Status Notification/
-			 and $from=~ /^postmaster/) {
-		    $folderpath= MovePath "BOUNCE";
-		} elsif ($subject=~ /failure notice/ and
-			 ($from=~ /\bMAILER[_-]DAEMON\@/i
-			  or
-			  $from=~ /\bpostmaster\@/i
-			 )
-			 # [siehe history fuer ethlife newsletter bounce (why war das?)]
- 			 and do {
- 			     $f->xread($content,$BUFSIZE);
- 			     if ($content=~ /but the bounce bounced\! *\n *\n *<[^\n]*>: *\n *Sorry, no mailbox here by that name/s) {
-				 # ^ the 'Sorry' check (or checking
-				 # the domain of the address) is
-				 # necessary to see that it tried to
-				 # deliver to *us*, not remotely.
-				 # Mess. XX is there any solid
-				 # alternative? XX ah, perhaps that
-				 # the mail doesn't have a message-id
-				 # header is at least indicative of a
-				 # bounce? XX ah, or this in the
-				 # original mail: 'Return-Path: <>',
-				 # or this in the current mail?:
-				 # 'Return-Path: <#@[]>'
- 				 $folderpath= MovePath "backscatter";
-				 # XX only backscatter that was sent
-				 # to an invalid address of mine! How
-				 # to trap the rest?
- 				 1
- 			     } else {
- 				 0
- 			     }
- 			 }) {
-		    # filtered. else go on in other elsifs
-		} elsif ($from=~ /GMX Magazin <mailings\@gmx/) {
-		    $folderpath= MovePath "list", "GMX Magazin";
-		} elsif ($from=~ /GMX Spamschutz.* <mailings\@gmx/) {
-		    $folderpath= MovePath "list", "GMX Spamschutz";
-		}
-		# cj 3.12.04 ebay:
-		elsif ($from=~ /\Q<newsletter_ch\@ebay.com>\E/) {
-		    $folderpath= MovePath "ebay-newsletter";
-		}
-		# sourceforge:
-		elsif (do {
-		    #warn "checking for sourceforge:";
-		    (
-		     (($tmp)= $subject=~ /^\[([^\]]+)\]/)
-		     and
-		     $from=~ /noreply\@sourceforge\.net/
-		    )
-		}) {
-		    #warn "yes, sourceforge";
-		    $folderpath= MovePath "sourceforge", $tmp;
-		}
+    if (my $subject= $head->maybe_decoded_header("subject")) {
+	# system mails
+	if ($subject=~ /^([a-zA-Z][\w-]+)\s+\d+.*\d system check\s*\z/) {
+	    return normal MovePath "system", "systemcheck-$1";
+	    ##ps.punkte dürfen in maildir foldernamen dann nicht vorkommen. weils separatoren sind. quoting möglich? in meiner library dann.
+	} elsif ($subject eq 'DEBUG') {
+	    return normal MovePath "system", "DEBUG";
+	} else {
+	    my $tmp; # instead of relying on $1 too long
+	    if ($subject=~ /^\[LifeCMS\]/
+		and ( $from eq 'alias@ethlife.ethz.ch'
+		      or $from eq 'newsletter@ethlife.ethz.ch') ) {
+		return normal MovePath "system", $subject;
+	    } elsif ($subject=~ /^Cron/ and $from=~ /Cron Daemon/) {
+		return normal MovePath "system", $subject;
+	    } elsif ($subject=~ /^Delivery Status Notification/
+		     and $from=~ /^postmaster/) {
+		return normal MovePath "BOUNCE";
+	    } elsif ($subject=~ /failure notice/ and
+		     ($from=~ /\bMAILER[_-]DAEMON\@/i
+		      or
+		      $from=~ /\bpostmaster\@/i
+		     )
+		     # [siehe history fuer ethlife newsletter bounce (why war das?)]
+		     and do {
+			 $f->xread($content,$BUFSIZE);
+			 if ($content=~ /but the bounce bounced\! *\n *\n *<[^\n]*>: *\n *Sorry, no mailbox here by that name/s) {
+			     # ^ the 'Sorry' check (or checking
+			     # the domain of the address) is
+			     # necessary to see that it tried to
+			     # deliver to *us*, not remotely.
+			     # Mess. XX is there any solid
+			     # alternative? XX ah, perhaps that
+			     # the mail doesn't have a message-id
+			     # header is at least indicative of a
+			     # bounce? XX ah, or this in the
+			     # original mail: 'Return-Path: <>',
+			     # or this in the current mail?:
+			     # 'Return-Path: <#@[]>'
+			     return normal MovePath "backscatter";
+			     # XX only backscatter that was sent
+			     # to an invalid address of mine! How
+			     # to trap the rest?
+			     1
+			 } else {
+			     0
+			 }
+		     }) {
+		# filtered. else go on in other elsifs
+	    } elsif ($from=~ /GMX Magazin <mailings\@gmx/) {
+		return normal MovePath "list", "GMX Magazin";
+	    } elsif ($from=~ /GMX Spamschutz.* <mailings\@gmx/) {
+		return normal MovePath "list", "GMX Spamschutz";
+	    }
+	    # cj 3.12.04 ebay:
+	    elsif ($from=~ /\Q<newsletter_ch\@ebay.com>\E/) {
+		return normal MovePath "ebay-newsletter";
+	    }
+	    # sourceforge:
+	    elsif (do {
+		#warn "checking for sourceforge:";
+		(
+		 (($tmp)= $subject=~ /^\[([^\]]+)\]/)
+		 and
+		 $from=~ /noreply\@sourceforge\.net/
+		)
+	    }) {
+		#warn "yes, sourceforge";
+		return normal MovePath "sourceforge", $tmp;
 	    }
 	}
     }
 
     # postmaster
-    if (!$folderpath) {
-	if (my $to= $head->maybe_header("to")) {
-	    if ($to=~ /^(postmaster\@[^\@;:,\s]+[a-z])/) {
-		$folderpath= MovePath $1;
-	    }
+    if (my $to= $head->maybe_header("to")) {
+	if ($to=~ /^(postmaster\@[^\@;:,\s]+[a-z])/) {
+	    return normal MovePath $1;
 	}
     }
 
     # facebook
-    if (!$folderpath) {
-	if ($head->maybe_header('x-facebook')) {
-	    # XX how many times to get that header? Also, why never
-	    # decoded above?
-	    if (my $subject= $head->maybe_decoded_header("subject")) {
-		if ($subject=~ /\bTrending\b/i) {
-		    $folderpath= MovePath "facebook", "trending"
-		} elsif ($subject=~ /\bdo you know /i) {
-		    $folderpath= MovePath "facebook", "doyouknow"
-		} elsif ($subject=~ /\bYou have more friends .*than you think/i) {
-		    $folderpath= MovePath "facebook", "morethanyouthink"
-		} else {
-		    #use Chj::repl;repl;
-		}
+    if ($head->maybe_header('x-facebook')) {
+	# XX how many times to get that header? Also, why never
+	# decoded above?
+	if (my $subject= $head->maybe_decoded_header("subject")) {
+	    if ($subject=~ /\bTrending\b/i) {
+		return normal MovePath "facebook", "trending"
+	    } elsif ($subject=~ /\bdo you know /i) {
+		return normal MovePath "facebook", "doyouknow"
+	    } elsif ($subject=~ /\bYou have more friends .*than you think/i) {
+		return normal MovePath "facebook", "morethanyouthink"
+	    } else {
+		#use Chj::repl;repl;
 	    }
 	}
     }
@@ -225,7 +213,7 @@ sub classify {
     # auto-replies received over mailing lists
     if ($head->is_autoreply) {
 	if (is_reply ($head)) {
-	    $folderpath= MovePath __("auto-reply through list");
+	    return normal MovePath __("auto-reply through list");
 	}
 	# In auto-replies so bad that they don't check out as replies
 	# to one of one's own mails to a list, there's still the
@@ -234,25 +222,19 @@ sub classify {
 	# bad idea, let the user 'decide').
     }
 
-    if (!$folderpath) {
-	if (!$is_ham and defined($maybe_spamscore) and $maybe_spamscore > 0) {
-	    $folderpath = MovePath __("possible spam");
-	}
+    if (!$is_ham and defined($maybe_spamscore) and $maybe_spamscore > 0) {
+	return normal MovePath __("possible spam");
     }
 
     # making the inbox
-    if (!$folderpath) {
-	# check mail size, to avoid downloading big mails over mobile
-	# connections
-	if (&$get_size() > 5000000) {
-	    $folderpath= MovePath "inbox-big";$important=1;
-	} else {
-	    $folderpath= MovePath (); # inbox
-	}
-    }
 
-    Mailmover::Classification->new
-	($folderpath,$important);
+    # check mail size, to avoid downloading big mails over mobile
+    # connections
+    if (&$get_size() > 5000000) {
+	return important MovePath "inbox-big"
+    } else {
+	return normal MovePath (); # inbox
+    }
 }
 
 
