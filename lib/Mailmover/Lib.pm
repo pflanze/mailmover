@@ -102,18 +102,24 @@ sub classify {
 
     my $list= $head->maybe_mailinglist_id;
     if ($list) {
-	# trust the spamfilter on list servers
-	if ($is_possible_spam) {
+	# also use the spamfilter on list servers (trust it to be
+	# honest)
+	print STDERR "WE HAVE BAYES: ".force($maybe_bayes_)."\n"
+	  if defined force($maybe_bayes_);
+	if ($is_possible_spam
+	    # don't catch BAYES_00
+	    and defined force ($maybe_bayes_)
+	    and force($maybe_bayes_) > 0
+	   ) {
 	    return normal MovePath "list", __("possible spam");
-	} elsif (0 and
-		 !$is_ham
+	} elsif (!$is_ham
 		 and defined $maybe_spamscore
 		 and defined $maybe_spamscore_old
-		 and defined force ($maybe_bayes_)
+		 and defined force($maybe_bayes_)
 		 # $maybe_spamscore is negative here:
-		 and ($maybe_spamscore_old + 2*$maybe_spamscore) > 1.5
+		 and ($maybe_spamscore_old + 2*$maybe_spamscore) > 1
 		 # don't put to possible spam if we have BAYES_00 already:
-		 and not(force ($maybe_bayes_) > 0)
+		 and force($maybe_bayes_) > 0
 		) {
 	    print STDERR "WE HAVE BAYES: ".force($maybe_bayes_)."\n";
 	    return normal MovePath "list", __("possible spam");
