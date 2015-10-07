@@ -274,7 +274,7 @@ sub conditional_move_file($ $ ) {
 		    if ($folderpath->is_inbox) {
 			$maildirbasefolder
 		    } else {
-			$folderpath=
+			my $folderpath=
 			  MovePath ("Z", $flag_sourceforge_original ? "original" : ())
 			    ->append($folderpath);
 			my @pathparts= $folderpath->maildirsubfolder_segments($targetbase);
