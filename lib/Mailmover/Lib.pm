@@ -89,12 +89,21 @@ sub classify {
 	}
     }
 
+    my $maybe_spamscore= $head->maybe_spamscore;
+    my $is_possible_spam= (!$is_ham
+			   and defined($maybe_spamscore)
+			   and $maybe_spamscore > 0);
+
     my $list= $head->maybe_mailinglist_id;
     if ($list) {
-	warn "'$filename': mailinglist $list\n" if $DEBUG;
-	my $class=
-	  $list=~ /debian-security-announce/i ? *important : *normal;
-	return &$class (MovePath "list", $list);
+	if ($is_possible_spam) {
+	    return normal MovePath "list", __("possible spam");
+	} else {
+	    warn "'$filename': mailinglist $list\n" if $DEBUG;
+	    my $class= ($list=~ /debian-security-announce/i ? *important
+			: *normal);
+	    return &$class (MovePath "list", $list);
+	}
     }
 
     # various subject checks
@@ -206,8 +215,7 @@ sub classify {
 	# bad idea, let the user 'decide').
     }
 
-    my $maybe_spamscore= $head->maybe_spamscore;
-    if (!$is_ham and defined($maybe_spamscore) and $maybe_spamscore > 0) {
+    if ($is_possible_spam) {
 	return normal MovePath __("possible spam");
     }
 
