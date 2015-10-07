@@ -336,7 +336,8 @@ sub is_reply {
 sub save_is_own {
     my ($mail) = @_;
     my $ownmsgidtable= Chj::FileStore::PIndex->new($ownmsgid_base);
-    $ownmsgidtable->add(scalar pick_out_of_anglebrackets($mail->maybe_first_header("message-id")),"");
+    $ownmsgidtable->add(scalar pick_out_of_anglebrackets
+			($mail->maybe_first_header("message-id")),"");
     if (my $subj= maybe_reduced_subject($mail)) {
 	my $ownsubjectstable= Chj::FileStore::PIndex->new($ownsubjects_base);
 	$ownsubjectstable->add($subj,"");
