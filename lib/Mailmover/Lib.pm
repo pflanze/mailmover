@@ -102,7 +102,7 @@ sub classify {
 	    (!$is_ham
 	     and defined $maybe_spamscore
 	     and defined $maybe_spamscore_old
-	     and ($maybe_spamscore_old + $maybe_spamscore) > 0)) {
+	     and ($maybe_spamscore_old + $maybe_spamscore) > 1.5)) {
 	    return normal MovePath "list", __("possible spam");
 	} else {
 	    warn "'$filename': mailinglist $list\n" if $DEBUG;
