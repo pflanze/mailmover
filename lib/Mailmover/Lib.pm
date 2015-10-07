@@ -83,9 +83,6 @@ sub classify {
 	pick_out_of_anglebrackets($head->maybe_first_header("message-id"))
     };
 
-    my $maybe_spamscore= $head->maybe_spamscore;
-
-
     if (my $subject= $head->maybe_decoded_header("subject")) {
 	# mailinglist reminders
 	if ($subject=~ /^\S+\s+mailing list memberships reminder\s*$/
@@ -97,16 +94,8 @@ sub classify {
     }
 
     my $list= $head->maybe_mailinglist_id;
-    if (defined $list) {
-	warn "'$filename': mailinglist $list\n" if $DEBUG;
-    } else {
-	warn "'$filename': not a list mail\n" if $DEBUG;
-    }
-    #if (!$list and 0) {
-    #use Data::Dumper;
-    #print "head for $filepath:",Dumper($head);
-    #}
     if ($list) {
+	warn "'$filename': mailinglist $list\n" if $DEBUG;
 	my $class=
 	  $list=~ /debian-security-announce/i ? *important : *normal;
 	return &$class (MovePath "list", $list);
@@ -222,6 +211,7 @@ sub classify {
 	# bad idea, let the user 'decide').
     }
 
+    my $maybe_spamscore= $head->maybe_spamscore;
     if (!$is_ham and defined($maybe_spamscore) and $maybe_spamscore > 0) {
 	return normal MovePath __("possible spam");
     }
