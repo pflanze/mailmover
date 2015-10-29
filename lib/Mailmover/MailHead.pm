@@ -372,7 +372,7 @@ sub maybe_spamscore {
     my ($maybe_headername)=@_; # e.g. 'X-Old-Spam-Status'
     my $headername= $maybe_headername // "X-Spam-Status";
     if (my $status=$self->maybe_first_header($headername)) {
-	if ($status=~ /score=(-?\d+(?:\.\d+)?)/){
+	if ($status=~ /\b(?:score|hits)=(-?\d+(?:\.\d+)?)/){
 	    $1
 	} else {
 	    warn "maybe_spamscore: $headername header found "
