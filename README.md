@@ -4,15 +4,19 @@ automatically recognizes mailing list email, and issues notifications
 when someone replies to a message sent to a list from one of the
 addresses defined in ~/.mailmover_config.pl (`is_own_emailaddress`
 function). It also notifies whenever it creates a new folder, or when
-there is a warning or error during filtering.
+there is a warning or error during filtering. It also detects and
+filters mails sent from system services (cron), and auto-replies
+coming from subscribers of mailing lists that you're sending email to
+(not perfect yet since it will only trigger if the own email will make
+it back first).
 
-All mail is filtered into (automatically created) subdirectories below
-the "Z" directory.
+All filtered mail (not destined for the inbox) is delivered into
+(automatically created) subdirectories below the "Z" directory.
 
 It can currently be configured to use german or english folder names
 and notification text.
 
-This is originally very old and quite ugly code developed purely for
+Originally this was very old and ugly code developed purely for
 personal use. I have cleaned it up quite a bit since, but it's still
 not a work of beauty.
 
