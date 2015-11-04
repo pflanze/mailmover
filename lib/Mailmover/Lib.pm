@@ -49,6 +49,11 @@ mkdir $msgid_base,0700;
 mkdir $ownmsgid_base,0700;
 mkdir $ownsubjects_base,0700;
 
+# From which score on mails are moved to "possible spam" (versus
+# "spam" which is the target when SA said it is spam, usually 5)
+our $possible_spam_minscore=1.9;
+
+
 my $BUFSIZE=50000;
 
 {
@@ -98,7 +103,7 @@ sub classify {
       };
     my $is_possible_spam= (!$is_ham
 			   and defined($maybe_spamscore)
-			   and $maybe_spamscore > 0);
+			   and $maybe_spamscore >= $possible_spam_minscore);
 
     my $list= $head->maybe_mailinglist_id;
     if ($list) {
