@@ -1,0 +1,30 @@
+#!/usr/bin/perl -w
+
+use strict; use warnings FATAL => 'uninitialized';
+
+use Test::More;
+
+my $expect=
+  [# some spamS:
+   ['Maildir/.Z. Spam/new/1443957524.2047.servi', undef, 1],
+   ['Maildir/.Z. Spam/new/1443957524.2047.servi', 10, 0],
+   # some hamS:
+   ['Maildir/new/1443518608.21249.servi:2,S', undef, 0],
+   ['Maildir/new/1443518608.21249.servi:2,S', -1, 0],
+   ['Maildir/new/1443518608.21249.servi:2,S', -2, 1],
+  ];
+
+for (@$expect) {
+    my ($path, $maybe_score, $expected_result)= @$_;
+  SKIP: {
+	if (-e $path) {
+	    is system ("./looks-hammy", $path, defined($maybe_score)? $maybe_score : ()),
+	      $expected_result*256,
+		$path;
+	} else {
+	    skip "test file '$path' does not exist", 1
+	}
+    }
+}
+
+done_testing;

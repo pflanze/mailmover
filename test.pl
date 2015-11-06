@@ -16,6 +16,7 @@ our @t=
   qw(
 	require_and_run_tests
 	local_corpus
+	looks-hammy
    );
 
 runtests(map {"t/$_"} @t);
