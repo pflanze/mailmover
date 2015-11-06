@@ -1,0 +1,71 @@
+#!/usr/bin/perl -wT
+
+#
+# Copyright 2015 by Christian Jaeger, ch at christianjaeger ch
+# Published under the same terms as perl itself
+#
+(my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
+
+use strict; use warnings FATAL => 'uninitialized';
+
+use Cwd 'abs_path';
+our ($mydir, $myname); BEGIN {
+    my $location= (-l $0) ? abs_path ($0) : $0;
+    $location=~ /(.*?)([^\/]+?)_?\z/s or die "?";
+    ($mydir, $myname)=($1,$2);
+}
+use lib "$mydir/lib";
+
+use findfunctionalperl;
+
+use Carp;
+use Chj::Backtrace;
+#use Chj::WithRepl qw(push_withrepl WithRepl_eval);
+#push_withrepl (0) if $DEBUG;
+use Mailmover::MailHead;
+use Chj::xopen qw(glob_to_fh);
+
+our $cut_off_score= 2;
+
+sub usage {
+    print STDERR map{"$_\n"} @_ if @_;
+    print "$myname source [cut-off-score]
+
+  source: file path or '-' for stdin; in the latter case the
+          filehandle is rewound, so that $myname can be used in .qmail
+          files
+
+  cut-off-score: below which score to return success (default: $cut_off_score)
+
+  (Christian Jaeger <$email>)
+";
+exit @_ ? 1 : 0;
+}
+
+usage "wrong number of arguments" unless (@ARGV==2 or @ARGV==1);
+
+my ($source,$maybe_cut_off_score)= @ARGV;
+
+usage if ($source eq "--help" or $source eq "-h");
+# XX hmm, and now need "--" quoting as *always*?
+
+$cut_off_score= $maybe_cut_off_score if defined $maybe_cut_off_score;
+# XX check if number?
+
+my $head= do {
+    if ($source eq "-") {
+	my $in= glob_to_fh *STDIN;
+	my $h= Mailmover::MailHead->new_from_fh($in);
+	$in->xrewind;
+	$h
+    } else {
+	Mailmover::MailHead->new_from_path($source);
+    }
+};
+
+if (defined (my $score= $head->maybe_spamscore)) {
+    exit ($score < $cut_off_score ? 0 : 1);
+} else {
+    warn "message does not contain a spam score; be safe and exit 1";
+    exit 1
+}
