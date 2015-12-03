@@ -25,7 +25,6 @@ use Carp;
 use Chj::Backtrace;
 use Chj::WithRepl qw(push_withrepl WithRepl_eval);
 use Scalar::Util 'tainted';
-use Chj::xopendir;
 use Chj::xperlfunc ':all';
 use Chj::xtmpfile;
 use Chj::singlequote;
@@ -34,7 +33,7 @@ use Chj::xsysopen 'xsysopen_excl';
 use Chj::xopen 'xopen_read';
 use Chj::time qw(set_time);
 use Chj::pid qw(set_pid);
-use FP::IOStream qw(xopendir_pathstream);
+use FP::IOStream qw(xdirectory_paths);
 use FP::Ops qw(string_cmp);
 use FP::Untainted qw(untainted untainted_with);
 use FP::Optional qw(optionally);
@@ -474,7 +473,7 @@ usage "only one source dir argument allowed"
 
 if ($sourcedir) {
   DO: {
-	xopendir_pathstream ($sourcedir, *string_cmp)->for_each
+	xdirectory_paths ($sourcedir, *string_cmp)->for_each
 	  (sub { conditional_move_file($_[0],$targetbase) });
 	if ($opt_loop) {
 	    sleep $opt_loop;
