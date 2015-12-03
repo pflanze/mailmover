@@ -247,7 +247,10 @@ sub classify {
     }
 
     # BRACK
-    if ($from =~ /<email\@newsletter.brack.ch>/) {
+    if ($from =~ /<email\@newsletter.brack.ch>/
+	# but they are sending *all* of their mail from this address,
+	# including order confirmations. man. Luckily, oddly:
+	and $head->maybe_header("List-Unsubscribe")) {
 	return normal MovePath "newsletter", "BRACK"
     }
 
