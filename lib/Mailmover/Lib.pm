@@ -246,6 +246,11 @@ sub classify {
 	}
     }
 
+    # BRACK
+    if ($from =~ /<email\@newsletter.brack.ch>/) {
+	return normal MovePath "newsletter", "BRACK"
+    }
+
     # auto-replies received over mailing lists
     if ($head->is_autoreply) {
 	if (is_reply ($head)) {
