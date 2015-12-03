@@ -1,7 +1,9 @@
-.gitignore
+.gitmodules
 MANIFEST
 README.md
+TODO
 default_mailmover_config.pl
+functional-perl
 lib/Chj/TransparentNoncachingLazy.pm
 lib/Mailmover/FirstFoundPath.pm
 lib/Mailmover/Lib.pm
@@ -13,11 +15,13 @@ lib/Mailmover/MovePath/t.pm
 lib/Mailmover/l10n.pm
 lib/Mailmover/safe_HOME.pm
 lib/findfunctionalperl.pm
+looks-hammy
 mailmover
 mailmovertest
 meta/ModuleList.pm
 t/local_corpus
 t/local_corpus.sh
+t/looks-hammy
 t/require_and_run_tests
 test.pl
 testcorpus/1439194193.2749.servi:2,S
