@@ -15,7 +15,7 @@ our ($mydir, $myname); BEGIN {
 use lib "$mydir/../lib";
 use lib "$mydir/../meta";
 
-use findfunctionalperl;
+use lib "$mydir/functional-perl/lib";
 
 use ModuleList;
 

@@ -19,7 +19,7 @@ our ($mydir, $myname); BEGIN {
 }
 use lib "$mydir/lib";
 
-use findfunctionalperl;
+use lib "$mydir/functional-perl/lib";
 
 use Carp;
 use Chj::Backtrace;

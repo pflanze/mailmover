@@ -14,7 +14,6 @@ lib/Mailmover/MovePath.pm
 lib/Mailmover/MovePath/t.pm
 lib/Mailmover/l10n.pm
 lib/Mailmover/safe_HOME.pm
-lib/findfunctionalperl.pm
 looks-hammy
 mailmover
 mailmovertest
