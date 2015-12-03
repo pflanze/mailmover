@@ -1,0 +1,3 @@
+[submodule "functional-perl"]
+	path = functional-perl
+	url = https://github.com/pflanze/functional-perl.git
