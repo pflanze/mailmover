@@ -83,8 +83,9 @@ sub classify {
     }
 
     my $from= $head->maybe_header_ignoringidenticalcopies("from");
+    my $subject= $head->maybe_decoded_header("subject");
 
-    if (my $subject= $head->maybe_decoded_header("subject")) {
+    if ($subject) {
 	# mailinglist reminders
 	if ($subject=~ /^\S+\s+mailing list memberships reminder\s*$/
 	    and
@@ -149,7 +150,7 @@ sub classify {
     }
 
     # various subject checks
-    if (my $subject= $head->maybe_decoded_header("subject")) {
+    if ($subject) {
 	# system mails
 	if ($subject=~ /^([a-zA-Z][\w-]+)\s+\d+.*\d system check\s*\z/) {
 	    return normal MovePath "system", "systemcheck-$1";
@@ -222,9 +223,7 @@ sub classify {
 
     # facebook
     if ($head->maybe_header('x-facebook')) {
-	# XX how many times to get that header? Also, why never
-	# decoded above?
-	if (my $subject= $head->maybe_decoded_header("subject")) {
+	if ($subject) {
 	    if ($subject=~ /\bTrending\b/i) {
 		return normal MovePath "facebook", "trending"
 	    } elsif ($subject=~ /\bdo you know /i) {
