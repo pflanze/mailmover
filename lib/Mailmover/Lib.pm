@@ -157,11 +157,7 @@ sub classify {
 	    return normal MovePath "system", "DEBUG";
 	} else {
 	    my $tmp; # instead of relying on $1 too long
-	    if ($subject=~ /^\[LifeCMS\]/
-		and ( $from eq 'alias@ethlife.ethz.ch'
-		      or $from eq 'newsletter@ethlife.ethz.ch') ) {
-		return normal MovePath "system", $subject;
-	    } elsif ($subject=~ /^Cron/ and $from=~ /Cron Daemon/) {
+	    if ($subject=~ /^Cron/ and $from=~ /Cron Daemon/) {
 		return normal MovePath "system", $subject;
 	    } elsif ($subject=~ /^Delivery Status Notification/
 		     and $from=~ /^postmaster/) {
