@@ -18,9 +18,9 @@ All filtered mail (not destined for the inbox) is delivered into
 It can currently be configured to use german or english folder names
 and notification text.
 
-Originally this was very old and ugly code developed purely for
-personal use. I have cleaned it up quite a bit since, but it's still
-not a work of beauty.
+I originally wrote this in a hurry for personal use, at a time when I
+wasn't that good a coder yet. I have cleaned it up quite a bit since,
+but it could still use more work.
 
 ## Installation
 
