@@ -137,7 +137,6 @@ sub classify {
 	});
 	
 	if ($possible_spam_reason) {
-	    # XX?
 	    warn "reason for 'possible spam': $possible_spam_reason\n";
 	    #if $DEBUG;
 	    return normal MovePath "list", __("possible spam");
@@ -154,7 +153,6 @@ sub classify {
 	# system mails
 	if ($subject=~ /^([a-zA-Z][\w-]+)\s+\d+.*\d system check\s*\z/) {
 	    return normal MovePath "system", "systemcheck-$1";
-	    ##ps.punkte dürfen in maildir foldernamen dann nicht vorkommen. weils separatoren sind. quoting möglich? in meiner library dann.
 	} elsif ($subject eq 'DEBUG') {
 	    return normal MovePath "system", "DEBUG";
 	} else {
@@ -173,7 +171,6 @@ sub classify {
 		      or
 		      $from=~ /\bpostmaster\@/i
 		     )
-		     # [siehe history fuer ethlife newsletter bounce (why war das?)]
 		     and do {
 			 if (force($content_)=~ /but the bounce bounced\! *\n *\n *<[^\n]*>: *\n *Sorry, no mailbox here by that name/s) {
 			     # ^ the 'Sorry' check (or checking
@@ -203,20 +200,18 @@ sub classify {
 	    } elsif ($from=~ /GMX Spamschutz.* <mailings\@gmx/) {
 		return normal MovePath "list", "GMX Spamschutz";
 	    }
-	    # cj 3.12.04 ebay:
+	    # ebay:
 	    elsif ($from=~ /\Q<newsletter_ch\@ebay.com>\E/) {
 		return normal MovePath "ebay-newsletter";
 	    }
 	    # sourceforge:
 	    elsif (do {
-		#warn "checking for sourceforge:";
 		(
 		 (($tmp)= $subject=~ /^\[([^\]]+)\]/)
 		 and
 		 $from=~ /noreply\@sourceforge\.net/
 		)
 	    }) {
-		#warn "yes, sourceforge";
 		return normal MovePath "sourceforge", $tmp;
 	    }
 	}
@@ -311,10 +306,12 @@ sub analyze_file($;$$) {
      $classification->is_important)
 }
 
-sub _reduce { # testcase siehe lombi:~/perldevelopment/test/mailmoverlib/t1
+# testcase siehe lombi:~/perldevelopment/test/mailmoverlib/t1
+sub _reduce {
     my ($str)=@_;
     if (defined $str) {
-	#$str=~ s/\s+/ /sg; cj 24.8.04: weil manche mailer wörter in mitte abeinanderbrechen, whitespace ganz raus.
+	# since some mailers break apart words in the middle, remove
+	# whitespace completely
 	$str=~ s/\s+//sg;
 	my $stripprefix=sub {
 	    $str=~ s/^(?:re|aw|fwd)://i
@@ -332,21 +329,16 @@ sub _reduce { # testcase siehe lombi:~/perldevelopment/test/mailmoverlib/t1
 			$inner--;
 			if ($inner==0) {
 			    if ($p == $len-1) {
-				# rausnehmen
 				$str= substr($str,1,$len-2);
 			    } else {
-				# wegschneiden.
-				#warn "vorwegschneiden '$str'";
 				substr($str,0,$p+1)="";
-				#warn "weggeschnitten, '$str'";
 			    }
 			    return 1;
 			}
 		    }
 		    $p++;
 		}
-		#warn "endslash nicht gefunden";
-		$str=substr($str,1);#tja. sosolala  sollte nicht schaden.
+		$str=substr($str,1);
 		return 1;
 	    }
 	    0
