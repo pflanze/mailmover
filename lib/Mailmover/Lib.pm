@@ -38,7 +38,8 @@ our ($DEBUG,$verbose);
 
 #####these here are shared with the 'x-sms-sendpending' script !!!.
 my $HOME= do {# untaint it.
-    $ENV{HOME}=~ m|^(/.*)|s or die "invalid \$HOME";##Hm, really trust it that far? but should be ok.
+    $ENV{HOME}=~ m|^(/.*)|s
+      or die "invalid \$HOME";##Hm, really trust it that far? but should be ok.
     $1
 };
 my $msgid_base="$HOME/.mailmover_msgids";# msgid->filenames.
@@ -125,13 +126,15 @@ sub classify {
 	      # for a list mail, allow higher scores (somehow SA finds
 	      # bad things in lists per se)
 	      if ($spamscore > (1 + $list_allowance)) {
-		  "high spamscore: spamscore[$spamscore] > (1 + list_allowance[$list_allowance])"
+		  "high spamscore: spamscore[$spamscore] > (1 + ".
+		    "list_allowance[$list_allowance])"
 	      } elsif (defined $maybe_spamscore_old and
 		       $spamscore <= 1 and
 		       (2*($spamscore-1) + $maybe_spamscore_old)
 		       > $list_allowance*2
 		      ) {
-		  "mix: (2*(spamscore[$spamscore]-1) + spamscore_old[$maybe_spamscore_old]) > list_allowance[$list_allowance]*2"
+		  "mix: (2*(spamscore[$spamscore]-1) + spamscore_old".
+		  "[$maybe_spamscore_old]) > list_allowance[$list_allowance]*2"
 	      } else {
 		  ''
 	      }
@@ -139,7 +142,9 @@ sub classify {
 	
 	if ($possible_spam_reason) {
 	    warn "reason for 'possible spam': $possible_spam_reason\n"
-	      if $DEBUG; # XX >= 2 or so, this is a more useful debug message than others
+	      if $DEBUG;
+	    # ^XX: use $DEBUG >= 2 or so, this is a more useful debug
+	    #      message than others
 	    return normal MovePath "list", __("possible spam");
 	} else {
 	    warn "'$filename': mailinglist $list\n" if $DEBUG;
