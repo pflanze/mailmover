@@ -2,15 +2,16 @@
 
 A script to filter (dispatch) email files from a directory into a
 hierarchy of Maildir+ folders. As one of the nicer features, it
-automatically recognizes mailing list email, and issues notifications
-when someone replies to a message sent to a list from one of the
+automatically recognizes mailing list email, moves it to a folder
+specific for that list, and issues notifications when someone replies
+to a message sent to a list from you (more precisely, one of the
 addresses defined in ~/.mailmover_config.pl (`is_own_emailaddress`
-function). It also notifies whenever it creates a new folder, or when
+function)). It also notifies whenever it creates a new folder, or when
 there is a warning or error during filtering. It also detects and
 filters mails sent from system services (cron), and auto-replies
 coming from subscribers of mailing lists that you're sending email to
-(not perfect yet since it will only trigger if the own email will make
-it back first).
+(this is not perfect currently since it will only trigger if the own
+email makes it back first).
 
 All filtered mail (not destined for the inbox) is delivered into
 (automatically created) subdirectories below the "Z" directory.
@@ -20,7 +21,7 @@ and notification text.
 
 I originally wrote this in a hurry for personal use, at a time when I
 wasn't that good a coder yet. I have cleaned it up quite a bit since,
-but it could still use more work.
+but it could still use some more work.
 
 ## Installation
 
