@@ -16,4 +16,13 @@ sub mailbox_language {
     "en"
 }
 
+# Whether a debian-security-announce message should issue an
+# "Important" notification; receives the package name as first
+# argument
+sub is_important_package {
+    my ($packagename)=@_;
+    1
+}
+
+
 1
