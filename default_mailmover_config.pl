@@ -21,6 +21,8 @@ sub mailbox_language {
 # argument
 sub is_important_package {
     my ($packagename)=@_;
+    # check for some likely installed and 'network-facing' packages:
+    #$packagename=~ /icedove|chromium|openssl|ssh|libreoffice|linux|bind/
     # never notify:
     0
 }
