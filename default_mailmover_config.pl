@@ -21,7 +21,8 @@ sub mailbox_language {
 # argument
 sub is_important_package {
     my ($packagename)=@_;
-    1
+    # never notify:
+    0
 }
 
 
