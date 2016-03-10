@@ -50,6 +50,17 @@ mkdir $msgid_base,0700;
 mkdir $ownmsgid_base,0700;
 mkdir $ownsubjects_base,0700;
 
+
+sub content_is_important_package ($) {
+    my ($content_)=@_;
+    my ($package)= force ($content_)=~ /\nPackage\s*:\s*(\S+)/
+	or do {
+	    warn "no match";
+	    return undef
+    };
+    main::is_important_package ($package)
+}
+
 # From which score on mails are moved to "possible spam" (versus
 # "spam" which is the target when SA said it is spam, usually 5)
 our $possible_spam_minscore=1.9;
@@ -148,8 +159,10 @@ sub classify {
 	    return normal MovePath "list", __("possible spam");
 	} else {
 	    warn "'$filename': mailinglist $list\n" if $DEBUG;
-	    my $class= ($list=~ /debian-security-announce/i ? *important
-			: *normal);
+	    my $class=
+		(($list=~ /debian-security-announce/i and
+		  content_is_important_package ($content_)) ? *important
+		 : *normal);
 	    return &$class (MovePath "list", $list);
 	}
     }
@@ -289,7 +302,10 @@ sub analyze_file($;$$) {
     my $f= xopen_read $filepath;
     my $head= Mailmover::MailHead->new_from_fh($f);
 
-    my $classification= classify ($filename, $is_ham, $f, $head,
+    my $classification= classify ($filename,
+				  $is_ham,
+				  $f,
+				  $head,
 				  lazy {
 				      xstat ($filepath)->size
 				  },
