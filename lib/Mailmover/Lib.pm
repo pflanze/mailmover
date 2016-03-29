@@ -262,6 +262,15 @@ sub classify {
 	return normal MovePath "newsletter", "BRACK"
     }
 
+    # General Assembly (spammy or legit service?)
+    my $GA_From= 'hello@hello.generalassemb.ly';
+    # 'General Assembly <hello@hello.generalassemb.ly>' didn't match, huh
+    if ($from =~ /\Q$GA_From\E/
+	and $head->maybe_header("List-Unsubscribe")
+       ) {
+	return normal MovePath "newsletter", "GeneralAssemb.ly"
+    }
+
     # auto-replies received over mailing lists
     if ($head->is_autoreply) {
 	if (is_reply ($head)) {
