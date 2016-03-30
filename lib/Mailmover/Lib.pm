@@ -271,6 +271,13 @@ sub classify {
 	return normal MovePath "newsletter", "GeneralAssemb.ly"
     }
 
+    # Shopify (really pretty spammy usually *paid* service ey)
+    if ($from =~ /\b(?:welcome|email)\@email\.shopify\.com\b/
+	and $head->maybe_header("List-Unsubscribe")
+       ) {
+	return normal MovePath "newsletter", "Shopify"
+    }
+
     # auto-replies received over mailing lists
     if ($head->is_autoreply) {
 	if (is_reply ($head)) {
