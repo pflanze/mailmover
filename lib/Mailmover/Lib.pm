@@ -278,6 +278,13 @@ sub classify {
 	return normal MovePath "newsletter", "Shopify"
     }
 
+    # Gitlab news
+    if ($from =~ /\bGitLab News\b.*\@gitlab\.com\b/
+	and $head->maybe_header("List-Unsubscribe")
+       ) {
+	return normal MovePath "newsletter", "GitLab"
+    }
+
     # auto-replies received over mailing lists
     if ($head->is_autoreply) {
 	if (is_reply ($head)) {
