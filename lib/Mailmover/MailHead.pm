@@ -219,6 +219,17 @@ sub is_junk_precedence {
        });
 }
 
+sub from_out_of_anglebrackets {
+    my $self=shift;
+    chompspace
+      pick_out_of_anglebrackets_or_original
+	($self->maybe_header("from") // "");
+    # is the // "" necessary to prevent failures? Presumably yes since
+    # at the latest chompspace will fail, at least with strict undef
+    # handling, perhaps I still don't do that here though? Ehr I do
+    # now, fatal.
+}
+
 sub maybe_mailinglist_id {
     my $self=shift;
     my ($value,$id);
@@ -248,10 +259,46 @@ sub maybe_mailinglist_id {
 	}
 	if ($value= $self->maybe_header("List-Id")) {
 	    if ($value=~ /<([^<>]{3,})>/) {
-		$id=$1;
-		last SEARCH;
+		my $listid= $1;
+		if ($listid=~ /^[\d_]{14,}\./) {
+		    # ignore shitty list-id's (mis-configuration on
+		    # behalf of list infrastructure owners?), like
+		    # List-ID: <7209406_434176.xt.local>; ugly part is
+		    # that those emails don't seem to contain any
+		    # *other* indication of them being lists, so have
+		    # to hack something here, man. Ah,
+		    # List-Unsubscribe:
+		    # <mailto:leave-fd22167270646b2531492c-fe4d117472660d7b7d1d-fec610737165037b-fe931372756d007d73-ff3212737164@leave.S7.exacttarget.com>
+		    # ah oh well. This is the case with Shopify. With
+		    # Brack: List-Unsubscribe:
+		    # <mailto:leave-fd8011761a3c402029-fe4e127972620d747517-fec312767762057a-fe8c127277600d7b73-ff5e137372@leave.newsletter.brack.ch>
+		    # (clearly the same software, but not same installation?)
+		    # Aha actually the same, f:
+
+		    # leave.newsletter.brack.ch mail is handled by 10 reply-mx.s6.exacttarget.com.
+
+		    # Return-Path: <bounce-56_HTML-69769903-662617-6224966-737@bounce.newsletter.brack.ch>
+		    # From: "BRACK.CH" <email@newsletter.brack.ch>
+
+		    # or shopify:
+
+		    # Return-Path: <bounce-2250_HTML-54729689-434176-7209406-6340@bounce.email.shopify.com>
+		    # From: "Shopify Forums" <email@email.shopify.com>
+
+
+		    my $from= $self->from_out_of_anglebrackets;
+		    if (my ($domain)= $from=~ /\@(.*)/s) {
+			$id= $domain;
+			last SEARCH;
+		    } else {
+			warn "mail with pseudo list-id but no proper From address: '$from'"
+		    }
+		} else {
+		    $id=$listid;
+		    last SEARCH;
+		}
 	    } else {
-		# warn "invalid list-id format '$value'"; ct: membershipreminders kommen hierhin
+		# warn "invalid list-id format '$value'"; ct: membershipreminders are getting here
 	    }
 	} #els
 	if ($value= $self->maybe_header("x-mailing-list")) {
@@ -299,7 +346,7 @@ sub maybe_mailinglist_id {
 			last RESENT;
 		    }
 		    # cj 12.12.04: weil neuerdings eine email reinkam mit Resent-From: Hideki Yamane <henrich@samba.gr.jp> (== From) vom Debian BTS, und X-Loop: mysql@packages.qa.debian.org (vorsicht mehrere X-Loop headers sind in andern mails möglich), das noch prüfen:
-		    my $p_from= chompspace pick_out_of_anglebrackets_or_original $self->maybe_header("from");
+		    my $p_from= $self->from_out_of_anglebrackets;
 		    my $p_id= chompspace pick_out_of_anglebrackets_or_original $id; ##sollte zwar ja eben nicht mehr nötig sein, aber warum oben eigener müll gemacht?.
 		    if (defined($p_from)
 			and
