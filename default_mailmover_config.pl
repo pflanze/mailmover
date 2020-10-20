@@ -28,4 +28,14 @@ sub is_important_package {
 }
 
 
+# Only send out auto responder responses if spamscore is below this
+# value (there is a default, see `mailmover`):
+#$max_auto_respond_spamscore = 0.5;
+
+# From which score on mails are moved to "possible spam" (versus
+# "spam" which is the target when SA said it is spam, usually 5)
+# (there is no default)
+$Mailmover::Lib::possible_spam_minscore = 1.9;
+
+
 1

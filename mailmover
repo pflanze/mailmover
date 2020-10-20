@@ -57,7 +57,7 @@ use Mailmover::FirstFoundPath;
 use Mailmover::safe_HOME;
 my $home= safe_HOME;
 
-our $max_auto_respond_spamscore = 0.5;
+our $max_auto_respond_spamscore = 0.5; # also see default_mailmover_config.pl
 
 require ( xfirst_found_path("$home/.mailmover_config.pl",
 			    "./.mailmover_config.pl",
@@ -65,6 +65,7 @@ require ( xfirst_found_path("$home/.mailmover_config.pl",
 # needs to define is_own_emailaddress, own_emailaddress,
 # mailbox_language as well as can change:
 #  $max_auto_respond_spamscore
+# and must set:
 #  $Mailmover::Lib::possible_spam_minscore
 
 

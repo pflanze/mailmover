@@ -63,7 +63,7 @@ sub content_is_important_package ($) {
 
 # From which score on mails are moved to "possible spam" (versus
 # "spam" which is the target when SA said it is spam, usually 5)
-our $possible_spam_minscore=1.9;
+our $possible_spam_minscore; # see default_mailmover_config.pl
 
 
 my $BUFSIZE=50000;
