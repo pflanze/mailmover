@@ -1,7 +1,7 @@
 #!/usr/bin/perl -wT
 
 #
-# Copyright 2007-2015 by Christian Jaeger, ch at christianjaeger ch
+# Copyright 2007-2020 by Christian Jaeger, ch at christianjaeger ch
 # Published under the same terms as perl itself
 #
 (my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
@@ -56,11 +56,16 @@ use Chj::TransparentNoncachingLazy;
 use Mailmover::FirstFoundPath;
 use Mailmover::safe_HOME;
 my $home= safe_HOME;
+
+our $max_auto_respond_spamscore = 0.5;
+
 require ( xfirst_found_path("$home/.mailmover_config.pl",
 			    "./.mailmover_config.pl",
 			    "./default_mailmover_config.pl") );
-# needs to define is_own_emailaddress, own_emailaddress and
-# mailbox_language
+# needs to define is_own_emailaddress, own_emailaddress,
+# mailbox_language as well as can change:
+#  $max_auto_respond_spamscore
+#  $Mailmover::Lib::possible_spam_minscore
 
 
 sub usage {
@@ -429,7 +434,8 @@ sub conditional_move_file($ $ ) {
 		    # really not an autoreply?
 		    unless ($mail->is_autoreply) {
 			my $maybe_spamscore=$mail->maybe_spamscore;
-			if (defined $maybe_spamscore and $maybe_spamscore >= 0.5) {
+			if (defined $maybe_spamscore
+			    and $maybe_spamscore >= $max_auto_respond_spamscore) {
 			    # don't auto-respond to possible spams
 			} else {
 			    my $senderaddress= $mail->maybe_decoded_header("from");
