@@ -1,5 +1,5 @@
 #
-# Copyright 2007-2015 by Christian Jaeger, ch at christianjaeger ch
+# Copyright 2007-2020 by Christian Jaeger, ch at christianjaeger ch
 # Published under the same terms as perl itself
 #
 
@@ -44,7 +44,7 @@ use MIME::Words 'decode_mimewords';
 use Chj::Encode::Permissive 'encode_permissive';
 use Chj::chompspace;
 use Mailmover::MailUtil qw(pick_out_of_anglebrackets_or_original);
-use FP::PureArray qw(is_purearray unsafe_array_to_purearray);
+use FP::PureArray qw(is_purearray array_to_purearray);
 use FP::List qw(null is_null);
 use FP::Predicates;
 use FP::Show;
@@ -97,9 +97,9 @@ sub new_from_fh {
 	# empty line inbetween), so it's not an error.
     }
 
-    for (values %headers) { unsafe_array_to_purearray $_ }
+    for (values %headers) { array_to_purearray $_ }
 
-    $class->new_(errors=> unsafe_array_to_purearray(\@errors),
+    $class->new_(errors=> array_to_purearray(\@errors),
 		 _headers_by_name=> \%headers)
 }
 

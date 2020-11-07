@@ -23,7 +23,7 @@ use lib "$mydir/functional-perl/lib";
 
 use Carp;
 use Chj::Backtrace;
-use Chj::WithRepl qw(push_withrepl WithRepl_eval);
+use FP::Repl::WithRepl qw(push_withrepl WithRepl_eval);
 use Scalar::Util 'tainted';
 use Chj::xperlfunc ':all';
 use Chj::xtmpfile;
