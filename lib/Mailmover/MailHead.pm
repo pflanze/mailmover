@@ -40,9 +40,14 @@ use strict; use warnings FATAL => 'uninitialized';
 
 
 sub looks_like_messed_up_list_id ($) {
+    # returns a score, 1 = probably, 2 = quite sure, 3+ = very sure
     my ($id)= @_;
-    ($id=~ /^reply-/
-     or $id=~ /[A-Z0-9]{35,}/)
+    my $score=0;
+    $score++ if $id=~ /^reply\+/;
+    $score++ if $id=~ /[A-Z0-9]{35,}/;
+    $score++ if $id=~ /[A-F0-9]{80,}/i;
+    $score++ if $id=~ /reply\.github\.com$/;
+    $score
 }
 
 
@@ -257,10 +262,12 @@ sub maybe_mailinglist_id {
 		# ssh list has mailto: in $id
 
 		# Now, fall back to List-Id if useful:
-		if (looks_like_messed_up_list_id($id)
+		my $messedup_score= looks_like_messed_up_list_id($id);
+		if ($messedup_score
 		    and defined(my $id2= $self->maybe_header("List-Id"))) {
 		    $id = $id2;
 		} else {
+		    # still use the List-Post value
 		    last SEARCH;
 		}
 	    } elsif (length $value > 3) {
