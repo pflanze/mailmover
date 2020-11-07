@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -euo pipefail
+IFS=
+
+(
+set -euo pipefail
+
+cd Maildir
+
+rm -rf * .Z*/; mkdir tmp new cur
+
+)
+
+(
+set -euo pipefail
+
+cd MaildirIn
+
+git reset --hard
+
+)
+
