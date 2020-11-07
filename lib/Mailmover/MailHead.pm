@@ -235,8 +235,7 @@ sub maybe_mailinglist_id {
     my ($value,$id);
   SEARCH:{
 	if ($value= $self->maybe_header("x-mailing-list-name")) {	# cj 15.10.04 damit perl6-all aufgeteilt wird.
-	    if ($value=~ /<([^<>]{3,})>/) {##ps da gibts doch pick_out_of_anglebrackets?
-		$id=$1;
+	    if (($id)= $value=~ /<([^<>]{3,})>/) {##ps da gibts doch pick_out_of_anglebrackets?
 		last SEARCH;
 	    } else {
 		#warn "invalid x-mailing-list-name format '$value'";
@@ -246,8 +245,8 @@ sub maybe_mailinglist_id {
 	}
 	# prioritize list-post over list-id since it contains the @ char?
 	if ($value= $self->maybe_header("List-Post")) {
-	    if ($value=~ /<([^<>]{3,})>/) { # just in case
-		$id=$1;# hier ist dann bei ssh list noch mailto: dabei
+	    if (($id)= $value=~ /<([^<>]{3,})>/) { # just in case
+		# ssh list has mailto: in $id
 		last SEARCH;
 	    } elsif (length $value > 3) {
 		warn "even if ssh mailinglist did put List-Post value into <>, this one did not ('$value')";
@@ -258,8 +257,7 @@ sub maybe_mailinglist_id {
 	    }
 	}
 	if ($value= $self->maybe_header("List-Id")) {
-	    if ($value=~ /<([^<>]{3,})>/) {
-		my $listid= $1;
+	    if (my ($listid)= $value=~ /<([^<>]{3,})>/) {
 		if ($listid=~ /^[\d_]{14,}\./) {
 		    # ignore shitty list-id's (mis-configuration on
 		    # behalf of list infrastructure owners?), like
