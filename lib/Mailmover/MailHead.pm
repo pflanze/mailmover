@@ -39,6 +39,12 @@ use strict; use warnings FATAL => 'uninitialized';
 }
 
 
+sub looks_like_messed_up_list_id ($) {
+    my ($id)= @_;
+    ($id=~ /^reply-/
+     or $id=~ /[A-Z0-9]{35,}/)
+}
+
 
 use MIME::Words 'decode_mimewords';
 use Chj::Encode::Permissive 'encode_permissive';
@@ -243,11 +249,20 @@ sub maybe_mailinglist_id {
 		last SEARCH; #!
 	    }
 	}
-	# prioritize list-post over list-id since it contains the @ char?
+	# prioritize list-post over list-id since it contains the @
+	# char, unless it's one that contains base64 numbers and
+	# List-Id is present (e.g. Github).
 	if ($value= $self->maybe_header("List-Post")) {
 	    if (($id)= $value=~ /<([^<>]{3,})>/) { # just in case
 		# ssh list has mailto: in $id
-		last SEARCH;
+
+		# Now, fall back to List-Id if useful:
+		if (looks_like_messed_up_list_id($id)
+		    and defined(my $id2= $self->maybe_header("List-Id"))) {
+		    $id = $id2;
+		} else {
+		    last SEARCH;
+		}
 	    } elsif (length $value > 3) {
 		warn "even if ssh mailinglist did put List-Post value into <>, this one did not ('$value')";
 		$id=$value;
