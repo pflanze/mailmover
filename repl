@@ -1,0 +1,45 @@
+#!/usr/bin/perl -w
+
+# Sat Nov  7 14:22:17 GMT 2020
+(my $email='ch%christianjaeger,ch')=~ tr/%,/@./;
+
+use strict; use warnings FATAL => 'uninitialized';
+
+$0=~ /(.*?)([^\/]+)\z/s or die "?";
+my ($mydir, $myname)=($1,$2);
+sub usage {
+    print STDERR map{"$_\n"} @_ if @_;
+    print "$myname ..
+
+  (Christian Jaeger <$email>)
+";
+exit (@_ ? 1 : 0);
+}
+
+use Getopt::Long;
+our $verbose=0;
+#our $opt_dry;
+GetOptions("verbose"=> \$verbose,
+	   "help"=> sub{usage},
+	   #"dry-run"=> \$opt_dry,
+	   ) or exit 1;
+#usage if @ARGV;
+
+use lib "functional-perl/lib";
+use lib "lib";
+
+use Mailmover::FirstFoundPath;
+use Mailmover::l10n;
+use Mailmover::Lib;
+use Mailmover::MailHead;
+use Mailmover::MailUtil;
+use Mailmover::MovePath;
+use Mailmover::safe_HOME;
+
+
+use Chj::xperlfunc;
+use Chj::xopen 'xopen_read';
+
+my @f= map { Mailmover::MailHead->new_from_path($_) } @ARGV;
+
+use FP::Repl;repl;
