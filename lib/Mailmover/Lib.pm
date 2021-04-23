@@ -1,5 +1,5 @@
 #
-# Copyright 2007-2020 by Christian Jaeger, ch at christianjaeger ch
+# Copyright 2007-2021 by Christian Jaeger, ch at christianjaeger ch
 # Published under the same terms as perl itself
 #
 
@@ -51,6 +51,7 @@ mkdir $ownmsgid_base,0700;
 mkdir $ownsubjects_base,0700;
 
 
+# for whether to notify about debian-security-announce mails
 sub content_is_important_package ($) {
     my ($content_)=@_;
     my ($package)= force ($content_)=~ /\nPackage\s*:\s*(\S+)/
