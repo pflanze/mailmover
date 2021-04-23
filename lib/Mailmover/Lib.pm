@@ -153,10 +153,11 @@ sub classify {
 	});
 	
 	if ($possible_spam_reason) {
-	    warn "reason for 'possible spam': $possible_spam_reason\n"
-	      if $DEBUG;
+	    warn "$filename: reason for 'possible spam': $possible_spam_reason\n"
+                #  if $DEBUG
+                ;
 	    # ^XX: use $DEBUG >= 2 or so, this is a more useful debug
-	    #      message than others
+	    #      message than others. Or make a Log function.
 	    return normal MovePath "list", __("possible spam");
 	} else {
 	    warn "'$filename': mailinglist $list\n" if $DEBUG;
