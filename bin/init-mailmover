@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Example start/stop script for mailmover daemons.
+
+# Uses `daemonize` and `loop` from https://github.com/pflanze/chj-bin,
+# the former of which depens on the daemontools package for its
+# multilog tool.
+
+set -euo pipefail
+IFS=
+
+if [ $# -lt 4 ]; then
+    echo "usage: $0 start|stop|restart|status logdir from-dir to-Maildir [ options.. ]"
+    echo "    Runs an instance of mailmover that picks up mail files from
+    immediately within \$from-dir (i.e. not a Maildir, or give path to
+    Maildir/new), and drops them to the right place within the maildir
+    \$to-Maildir. Logs are written to \$logdir in daemontools multilog
+    format (you could use the tai and taif scripts from chj-bin to
+    read them).
+
+    Options can be any mailmover options; particularly interesting is:
+
+       --ham  assume any mail in from-dir is a ham (e.g. in ham
+              teaching mode)
+
+    Note that mailmover is being restarted about every 5 minutes
+    anyway. But the restart action will still be useful to pick up
+    configuration changes immediately."
+    exit 1
+fi
+
+action=$1
+logdir=$2
+fromdir=$3
+toMaildir=$4
+shift
+shift
+shift
+shift
+
+
+(umask 077; mkdir -p "$logdir")
+
+/opt/chj/bin/daemonize --action "$action" --multilog "$logdir" \
+    /opt/chj/bin/loop \
+    /opt/chj/mailmover/mailmover --repeat 150 -l 2 -d "$fromdir" -m "$toMaildir" \
+    "$@"
