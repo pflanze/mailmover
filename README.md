@@ -55,7 +55,8 @@ Read
 
 It can be run as a daemon, using the `-l` option (and optionally
 `--repeat` to limit the number of repetitions in case there are memory
-leaks). For example, add the following to crontab:
+leaks). For example, add the following to crontab of the user that
+receives the email:
 
      @reboot daemonize --start --out log/mailmover.log loop /opt/chj/mailmover/mailmover --repeat 100 -l 5 -d MaildirIn/new/ -m Maildir
 
@@ -63,3 +64,10 @@ This assumes that incoming mail is put to the maildir ~/MaildirIn,
 that there's a ~/log directory, and that `daemonize` and `loop` from
 [chj-bin](https://github.com/pflanze/chj-bin) are installed and
 reachable from crontab's PATH (can be set within the crontab).
+
+Or use the [bin/init-mailmover](bin/init-mailmover) script. For a
+setup that also picks up learned hams from ~/MaildirIn/HAM:
+
+    @reboot /opt/chj/mailmover/bin/init-mailmover start ~/log/mailmover ~/MaildirIn/new  ~/Maildir
+    @reboot /opt/chj/mailmover/bin/init-mailmover start ~/log/mailmover-ham ~/MaildirIn/HAM  ~/Maildir --ham
+
