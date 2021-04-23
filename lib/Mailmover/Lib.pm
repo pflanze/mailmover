@@ -132,7 +132,7 @@ sub classify {
 	      # some lists just seem to come with higher scores
 	      my $specific_list_allowance=
 		($list=~ /spamassassin/ ? 2.5 :
-		 $list=~ /debian/ ? -1 :
+		 # $list=~ /debian/ ? -1 :
 		 0);
 
 	      # for a list mail, allow higher scores (somehow SA finds
