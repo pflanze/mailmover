@@ -130,23 +130,23 @@ sub classify {
 	      my $spamscore= $maybe_spamscore;
 
 	      # some lists just seem to come with higher scores
-	      my $list_allowance=
+	      my $specific_list_allowance=
 		($list=~ /spamassassin/ ? 2.5 :
 		 $list=~ /debian/ ? -1 :
 		 0);
 
 	      # for a list mail, allow higher scores (somehow SA finds
 	      # bad things in lists per se)
-	      if ($spamscore > (1 + $list_allowance)) {
+	      if ($spamscore > (1 + $specific_list_allowance)) {
 		  "high spamscore: spamscore[$spamscore] > (1 + ".
-		    "list_allowance[$list_allowance])"
+		    "specific_list_allowance[$specific_list_allowance])"
 	      } elsif (defined $maybe_spamscore_old and
 		       $spamscore <= 1 and
 		       (2*($spamscore-1) + $maybe_spamscore_old)
-		       > $list_allowance*2
+		       > $specific_list_allowance*2
 		      ) {
 		  "mix: (2*(spamscore[$spamscore]-1) + spamscore_old".
-		  "[$maybe_spamscore_old]) > list_allowance[$list_allowance]*2"
+		  "[$maybe_spamscore_old]) > specific_list_allowance[$specific_list_allowance]*2"
 	      } else {
 		  ''
 	      }
