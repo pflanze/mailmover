@@ -120,8 +120,8 @@ sub classify {
     my $correction= do {
         if (defined (my $old= $head->maybe_first_header('X-Old-Spam-Status'))) {
             my $total= 0;
-            $total+= -1 if $old=~ /\bLDOSUBSCRIBER\b/;
-            $total+= -1 if $old=~ /\bLDO_WHITELIST\b/;
+            $total+= -2 if $old=~ /\bLDOSUBSCRIBER\b/;
+            $total+= -3 if $old=~ /\bLDO_WHITELIST\b/;
             $total
         } else {
             0
@@ -148,7 +148,7 @@ sub classify {
 	      # some lists just seem to come with higher scores
 	      my $specific_list_allowance=
 		($list=~ /spamassassin/ ? 2.5 :
-		 # $list=~ /debian/ ? -1 :
+		 $list=~ /debian/ ? -2 :
 		 0);
 
 	      # for a list mail, allow higher scores (somehow SA finds
