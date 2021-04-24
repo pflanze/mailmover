@@ -29,23 +29,7 @@ Get the submodules:
 
     git submodule init && git submodule update
 
-Optional: run the tests in the functional-perl submodule (although the
-kind of test most likely to fail is rather unlikely to be relevant for
-better-qmail-remote):
-
-    cd functional-perl
-    ./test.pl
-    # NOTE: 't/csvstreams' is known to fail, no problem for this project.
-
-
-To run the t/local_corpus test, you need to put maildirs holding a set
-of to-be filtered mails (in MaildirIn) and how you want it to be
-filtered (in Maildir), both committed to Git repositories within those
-folders.
-
-To run the tests:
-
-    ./test.pl
+Optional: run the tests, see [HACKING](HACKING.md).
 
 ## Usage
 
@@ -71,3 +55,6 @@ setup that also picks up learned hams from ~/MaildirIn/HAM:
     @reboot /opt/chj/mailmover/bin/init-mailmover start ~/log/mailmover ~/MaildirIn/new  ~/Maildir
     @reboot /opt/chj/mailmover/bin/init-mailmover start ~/log/mailmover-ham ~/MaildirIn/HAM  ~/Maildir --ham
 
+## Hacking
+
+See [HACKING](HACKING.md).
