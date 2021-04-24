@@ -122,22 +122,25 @@ sub classify {
 	  my $v= $head->maybe_first_header('X-Spam-Status');
 	  defined $v ? ($v=~ /BAYES_(\d+)/ ? $1 : undef) : undef
       };
-    # Correct SA's spamscore with more scoring (would it be cleaner to
-    # do this in SA itself? Yes. Except I don't know it. And in future
-    # will do NN too and that probably won't be in SA either.)
-    my $correction= do {
-        if (defined (my $old= $head->maybe_first_header('X-Old-Spam-Status'))) {
-            my $total= 0;
-            $total+= -2 if $old=~ /\bLDOSUBSCRIBER\b/;
-            $total+= -3 if $old=~ /\bLDO_WHITELIST\b/;
-            $total
-        } else {
-            0
-        }
-    };
     my $maybe_mailmover_spamscore = do {
         my $maybe_spamscore= $head->maybe_spamscore;
-        defined $maybe_spamscore ?  $maybe_spamscore + $correction : undef
+        defined $maybe_spamscore ? do {
+            # Correct SA's spamscore with more scoring (would it be cleaner to
+            # do this in SA itself? Yes. Except I don't know it. And in future
+            # will do NN too and that probably won't be in SA either.)
+            my $correction= do {
+                if (defined (my $old= $head->maybe_first_header(
+                                 'X-Old-Spam-Status'))) {
+                    my $total= 0;
+                    $total+= -2 if $old=~ /\bLDOSUBSCRIBER\b/;
+                    $total+= -3 if $old=~ /\bLDO_WHITELIST\b/;
+                    $total
+                } else {
+                    0
+            }
+            };
+            $maybe_spamscore + $correction
+        } : undef
     };
     my $is_possible_spam= (!$is_ham
 			   and defined($maybe_mailmover_spamscore)
