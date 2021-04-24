@@ -108,16 +108,32 @@ sub classify {
 	}
     }
 
-    my $maybe_spamscore= $head->maybe_spamscore;
     my $maybe_spamscore_old= $head->maybe_spamscore('X-Old-Spam-Status');
     my $maybe_bayes_=
       lazy {
 	  my $v= $head->maybe_first_header('X-Spam-Status');
 	  defined $v ? ($v=~ /BAYES_(\d+)/ ? $1 : undef) : undef
       };
+    # Correct SA's spamscore with more scoring (would it be cleaner to
+    # do this in SA itself? Yes. Except I don't know it. And in future
+    # will do NN too and that probably won't be in SA either.)
+    my $correction= do {
+        if (defined (my $old= $head->maybe_first_header('X-Old-Spam-Status'))) {
+            my $total= 0;
+            $total+= -0.5 if $old=~ /\bLDOSUBSCRIBER\b/;
+            $total+= -0.5 if $old=~ /\bLDO_WHITELIST\b/;
+            $total
+        } else {
+            0
+        }
+    };
+    my $maybe_mailmover_spamscore = do {
+        my $maybe_spamscore= $head->maybe_spamscore;
+        defined $maybe_spamscore ?  $maybe_spamscore + $correction : undef
+    };
     my $is_possible_spam= (!$is_ham
-			   and defined($maybe_spamscore)
-			   and $maybe_spamscore >= $possible_spam_minscore);
+			   and defined($maybe_mailmover_spamscore)
+			   and $maybe_mailmover_spamscore >= $possible_spam_minscore);
 
     my $list= $head->maybe_mailinglist_id;
     if ($list) {
@@ -126,8 +142,8 @@ sub classify {
 
 	# can't maybe_, since and chain may give '' right?
 	my $possible_spam_reason=
-	  (!$is_ham and defined $maybe_spamscore and do {
-	      my $spamscore= $maybe_spamscore;
+	  (!$is_ham and defined $maybe_mailmover_spamscore and do {
+	      my $spamscore= $maybe_mailmover_spamscore;
 
 	      # some lists just seem to come with higher scores
 	      my $specific_list_allowance=
