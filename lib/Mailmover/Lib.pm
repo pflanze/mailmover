@@ -120,8 +120,8 @@ sub classify {
     my $correction= do {
         if (defined (my $old= $head->maybe_first_header('X-Old-Spam-Status'))) {
             my $total= 0;
-            $total+= -0.5 if $old=~ /\bLDOSUBSCRIBER\b/;
-            $total+= -0.5 if $old=~ /\bLDO_WHITELIST\b/;
+            $total+= -1 if $old=~ /\bLDOSUBSCRIBER\b/;
+            $total+= -1 if $old=~ /\bLDO_WHITELIST\b/;
             $total
         } else {
             0
