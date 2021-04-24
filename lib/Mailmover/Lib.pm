@@ -34,6 +34,14 @@ use Mailmover::MailUtil qw(pick_out_of_anglebrackets);
 use Mailmover::MailHead;
 use Mailmover::l10n;
 
+# For printing to stderr (and then stored in log dir if using
+# `bin/init-mailmover`):
+sub Log {
+    print STDERR join(": ", @_), "\n"
+        or warn "can't write to stderr: $!";
+}
+
+# For output to report mails delivered to output Maildir's inbox:
 our ($DEBUG,$verbose);
 
 #####these here are shared with the 'x-sms-sendpending' script !!!.
@@ -174,11 +182,7 @@ sub classify {
 	});
 	
 	if ($possible_spam_reason) {
-	    warn "$filename: reason for 'possible spam': $possible_spam_reason\n"
-                #  if $DEBUG
-                ;
-	    # ^XX: use $DEBUG >= 2 or so, this is a more useful debug
-	    #      message than others. Or make a Log function.
+	    Log $filename, "reason for 'possible spam': $possible_spam_reason";
 	    return normal MovePath "list", __("possible spam");
 	} else {
 	    warn "'$filename': mailinglist $list\n" if $DEBUG;
