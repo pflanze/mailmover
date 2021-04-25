@@ -137,7 +137,7 @@ sub classify {
                     $total
                 } else {
                     0
-            }
+                }
             };
             $maybe_spamscore + $correction
         } : undef
