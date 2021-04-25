@@ -210,7 +210,10 @@ my @warns;
 unless ($DEBUG) {
     $SIG{__WARN__}= sub {
         my $msg= join("", @_);
-        Log "(reported)", $msg;
+        {
+            my $m= $msg; chomp $m;
+            Log "(reported)", $m;
+        }
         push @warns,
           $msg=~ /\n\z/s ? $msg : Carp::longmess($msg);
     };
