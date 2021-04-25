@@ -210,12 +210,8 @@ my @warns;
 unless ($DEBUG) {
     $SIG{__WARN__}= sub {
         my $msg= join("", @_);
-        {
-            my $m= $msg; chomp $m;
-            Log "(reported)", $m;
-        }
-        push @warns,
-          $msg=~ /\n\z/s ? $msg : Carp::longmess($msg);
+        my $msg1 = $msg=~ /\n\z/s ? $msg : Carp::longmess($msg);
+        push @warns, [$msg, $msg1];
     };
 }
 
@@ -465,12 +461,33 @@ sub conditional_move_file($ $ ) {
     };
 
     if (@warns) {
+        for (@warns) {
+            my ($msg, $_msg1);
+            if (ref $_) {
+                ($msg, $_msg1)= @$_;
+            } else {
+                $msg= $_;
+            }
+            chomp $msg;
+            Log "(reported)", $filename, $msg;
+        }
+
+        my $warns1 = join "\n\n", map {
+            my ($_msg, $msg1);
+            if (ref $_) {
+                ($_msg, $msg1)= @$_;
+            } else {
+                $msg1= $_;
+            }
+            $msg1
+        } @warns;
         writewarnmail(__("Warnings for email")." $quotedsubject",
                       __("Warnings for email").":\n".
                       __("     From")." $quotedfrom\n".
                       __("  Subject")." $quotedsubject\n".
                       __("saved in folder")." $quotedfolderpath:\n\n".
-                      join "\n\n",@warns);
+                      $warns1);
+
         @warns=(); # !
     }
 }
