@@ -28,7 +28,6 @@ use Scalar::Util 'tainted';
 use Chj::xperlfunc ':all';
 use Chj::xtmpfile;
 use Chj::singlequote;
-use Chj::chompspace;
 use Chj::xsysopen 'xsysopen_excl';
 use Chj::xopen 'xopen_read';
 use Chj::time qw(set_time);
