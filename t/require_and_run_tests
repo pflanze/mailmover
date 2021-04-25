@@ -37,12 +37,12 @@ use Test::More;
 
 for (@$modules) {
   SKIP: {
-	if (my $ds= $dependencies{$_}) {
-	    for my $d (@$ds) {
-		eval "require $d; 1" or skip "failed to use $d", 1
-	    }
-	}
-	require_ok $_
+        if (my $ds= $dependencies{$_}) {
+            for my $d (@$ds) {
+                eval "require $d; 1" or skip "failed to use $d", 1
+            }
+        }
+        require_ok $_
     }
 }
 

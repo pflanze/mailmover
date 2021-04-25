@@ -60,8 +60,8 @@ my $home= safe_HOME;
 our $max_auto_respond_spamscore = 0.0; # also see default_mailmover_config.pl
 
 require ( xfirst_found_path("$home/.mailmover_config.pl",
-			    "./.mailmover_config.pl",
-			    "./default_mailmover_config.pl") );
+                            "./.mailmover_config.pl",
+                            "./default_mailmover_config.pl") );
 # needs to define is_own_emailaddress, own_emailaddress,
 # mailbox_language as well as can change:
 #  $max_auto_respond_spamscore
@@ -107,10 +107,10 @@ my ($opt_config,
 for (my $i=0; $i<=$#ARGV; $i++) {
     local $_=$ARGV[$i];
     if (/^--?h(elp)?$/) {
-    	usage
+        usage
     } elsif ($_ eq '--') {
-    	push @args, @ARGV[$i+1..$#ARGV];
-    	last;
+        push @args, @ARGV[$i+1..$#ARGV];
+        last;
     } elsif (/^--config(?:=(.*))?$/) {
         if (defined $1 and length $1) {
             $opt_config=$1
@@ -129,43 +129,43 @@ for (my $i=0; $i<=$#ARGV; $i++) {
         } else {
             $opt_loop=$ARGV[++$i]
         }
-	$opt_loop+=0;
-	$opt_loop or usage "missing argument for '$_' option";
+        $opt_loop+=0;
+        $opt_loop or usage "missing argument for '$_' option";
     } elsif (/^--?d(ebug)?$/) {
-	$DEBUG=1;
+        $DEBUG=1;
     } elsif (/^--repeat(?:=(.*))?$/) {
         if (defined $1) {
             $opt_repeat=$1
         } else {
             $opt_repeat=$ARGV[++$i]
         }
-	$opt_repeat+=0;
-	$opt_repeat or usage "missing argument for '$_' option";
+        $opt_repeat+=0;
+        $opt_repeat or usage "missing argument for '$_' option";
     } elsif (/^--maildirs?$/ or /^-m$/) {
-	$opt_maildirs=1;
+        $opt_maildirs=1;
     } elsif (/^--?(v+)(?:erbose)?$/) {
-	$verbose+=length($1);
+        $verbose+=length($1);
     } elsif (/^--files$/) {
-	$opt_files=1;
+        $opt_files=1;
     } elsif (/^--stdin$/) {
-	$opt_stdin=1;
+        $opt_stdin=1;
     } elsif (/^--ham$/) {
-	$opt_is_ham=1;
+        $opt_is_ham=1;
     } elsif (/^-./) {
-    	usage("Unknown option '$_'\n");
+        usage("Unknown option '$_'\n");
     } else {
-    	push @args, $_
+        push @args, $_
     }
 }
 usage unless @args;
 
 usage "give exactly one of --stdin / --files / --dir"
   unless (($opt_stdin or $opt_files or $sourcedir) and
-	  not (($opt_files and $opt_stdin)
-	       or
-	       ($opt_files and $sourcedir)
-	       or
-	       ($opt_stdin and $sourcedir)));
+          not (($opt_files and $opt_stdin)
+               or
+               ($opt_files and $sourcedir)
+               or
+               ($opt_stdin and $sourcedir)));
 
 usage "don't give files unless --files is given"
   if (@args > 1 and not $opt_files);
@@ -209,10 +209,10 @@ my @warns;
 
 unless ($DEBUG) {
     $SIG{__WARN__}= sub {
-	my $msg= join("", @_);
+        my $msg= join("", @_);
         Log "(reported)", $msg;
-	push @warns,
-	  $msg=~ /\n\z/s ? $msg : Carp::longmess($msg);
+        push @warns,
+          $msg=~ /\n\z/s ? $msg : Carp::longmess($msg);
     };
 }
 
@@ -220,22 +220,22 @@ unless ($DEBUG) {
     my $base;
 
     sub writewarnmail {
-	my ($subj,$data)=@_;
-	eval {
-	    require Chj::Sendmail;
-	    require Chj::Maildir::Basefolder;
-	    1
-	} or die "wanted to send mailasstring '$subj' but: $@";
-	$base ||= Chj::Maildir::Basefolder->new($targetbase_messages);
-	my $mail = Chj::Sendmail::prepare_mailasstring(To=>__("you"),
-						       From=>"$myname",
-						       Subject=>"$subj",
-						       Data=>"$data");
-	# Chj::Maildir is still missing 'real' delivery functionality?
-	my $warnfile = xtmpfile Chj::IO::Tempfile "$targetbase_messages/tmp/";
-	$warnfile->xprint($mail);
-	$warnfile->xclose;
-	$base->deliver_file($warnfile->path);
+        my ($subj,$data)=@_;
+        eval {
+            require Chj::Sendmail;
+            require Chj::Maildir::Basefolder;
+            1
+        } or die "wanted to send mailasstring '$subj' but: $@";
+        $base ||= Chj::Maildir::Basefolder->new($targetbase_messages);
+        my $mail = Chj::Sendmail::prepare_mailasstring(To=>__("you"),
+                                                       From=>"$myname",
+                                                       Subject=>"$subj",
+                                                       Data=>"$data");
+        # Chj::Maildir is still missing 'real' delivery functionality?
+        my $warnfile = xtmpfile Chj::IO::Tempfile "$targetbase_messages/tmp/";
+        $warnfile->xprint($mail);
+        $warnfile->xclose;
+        $base->deliver_file($warnfile->path);
     }
 }
 
@@ -243,10 +243,10 @@ sub Maybe_take_filename ( $ ) { # take filename iff it is looking like a maildir
     my ($filepath)=@_;
     $filepath=~ s|.*/||s;
     if ($filepath=~ /^(\d{9,10}\.[^.]+\..*)/s) {
-	$1
+        $1
     } else {
-	# (otherwise let the caller let generate a new proper one)
-	return
+        # (otherwise let the caller let generate a new proper one)
+        return
     }
 }
 
@@ -263,212 +263,212 @@ sub conditional_move_file($ $ ) {
     my ($quotedsubject, $quotedfolderpath);
     $quotedsubject=$quotedfolderpath= Lazy { __("(stopped before retrieval)") };
     WithRepl_eval {
-	my ($mail,$folderpath,$important)=
-	  analyze_file ($filepath, undef, $opt_is_ham);
-	$quotedsubject= Lazy { singlequote($mail->maybe_decoded_header("subject"),
-					   __("(no subject)")) };
-	$from=$mail->maybe_decoded_header("From");
-	$quotedfolderpath= Lazy { singlequote ($folderpath->maybe_string ($targetbase)) };
+        my ($mail,$folderpath,$important)=
+          analyze_file ($filepath, undef, $opt_is_ham);
+        $quotedsubject= Lazy { singlequote($mail->maybe_decoded_header("subject"),
+                                           __("(no subject)")) };
+        $from=$mail->maybe_decoded_header("From");
+        $quotedfolderpath= Lazy { singlequote ($folderpath->maybe_string ($targetbase)) };
 
-	my $targetfolder_is_symlink;
-	if ($folderpath) { # XX shouldn't this *always* be the case? even inbox is a FolderPath.
-	    if ($opt_maildirs) {
+        my $targetfolder_is_symlink;
+        if ($folderpath) { # XX shouldn't this *always* be the case? even inbox is a FolderPath.
+            if ($opt_maildirs) {
 
-		my $make_subfolder= sub {
-		    my ($folderpath, $flag_sourceforge_original)=@_;
-		    if ($folderpath->is_inbox) {
-			$maildirbasefolder
-		    } else {
-			my $folderpath=
-			  MovePath ("Z", $flag_sourceforge_original ? "original" : ())
-			    ->append($folderpath);
-			my @pathparts= $folderpath->maildirsubfolder_segments($targetbase);
-			my $sub= $maildirbasefolder;
-			for (@pathparts) {
-			    next unless length;
-			    $sub= Chj::Maildir::Subfolder->new ($sub,$_);
-			}
-			$sub->create(1)
-			  and warn (__("created new folder:")
-				    ." $quotedfolderpath\n");
-			# Instead send specialized notification
-			# message? But that's bad for testing--well, not
-			# anymore.
-			$sub
-		    }
-		};
+                my $make_subfolder= sub {
+                    my ($folderpath, $flag_sourceforge_original)=@_;
+                    if ($folderpath->is_inbox) {
+                        $maildirbasefolder
+                    } else {
+                        my $folderpath=
+                          MovePath ("Z", $flag_sourceforge_original ? "original" : ())
+                            ->append($folderpath);
+                        my @pathparts= $folderpath->maildirsubfolder_segments($targetbase);
+                        my $sub= $maildirbasefolder;
+                        for (@pathparts) {
+                            next unless length;
+                            $sub= Chj::Maildir::Subfolder->new ($sub,$_);
+                        }
+                        $sub->create(1)
+                          and warn (__("created new folder:")
+                                    ." $quotedfolderpath\n");
+                        # Instead send specialized notification
+                        # message? But that's bad for testing--well, not
+                        # anymore.
+                        $sub
+                    }
+                };
 
-		my $deliver= sub {
-		    my ($filepath,$sub,$maybe_filename)=@_;
-		    $sub->deliver_file
-		      ($filepath,
-		       $maybe_filename || Maybe_take_filename($filepath));
-		};
+                my $deliver= sub {
+                    my ($filepath,$sub,$maybe_filename)=@_;
+                    $sub->deliver_file
+                      ($filepath,
+                       $maybe_filename || Maybe_take_filename($filepath));
+                };
 
-		if (($folderpath->maybe_first_segment//"") eq "sourceforge") {
-		    &$deliver($filepath,  &$make_subfolder($folderpath, 1));
+                if (($folderpath->maybe_first_segment//"") eq "sourceforge") {
+                    &$deliver($filepath,  &$make_subfolder($folderpath, 1));
 
-		    # isnt't it HACKY: in mailmoverlib I've got the
-		    # head in memory anyway.
-		    my $in= xopen_read $filepath;
-		    my $t= xtmpfile "$targetbase/tmp/"; # don't forget the end slash
-		    my $originator= do {
-			my $By;
-			while (<$in>) {
-			    if (/^$/) {
-				for (1..10) {
-				    $_=<$in>; last unless defined $_;
-				    if (($By)= /^By:\s*(\S+)/) {
-					last;
-				    }
-				}
-				last;
-			    }
-			}
-			$By
-		    };
-		    #warn "originator='$originator'";
-		    $in->xrewind;
-		    while (<$in>) {
-			if (/^$/) {
-			    $t->xprint ($_);
-			    while (<$in>) {
-				$t->xprint ($_);
-			    }
-			    last;
-			} else {
-			    (s/^(subject:\s*)\[[^\]]+\]\s*(.*)/$1$2/si
-			     or
-			     s/^(from:\s*)(.*)/
-				 my ($pre,$adr)=($1,$2);
-				 if ($originator) {
-				     $adr=~ s{"[^\"]*"}{"$originator"};
-				 }
-				 $pre.$adr
-			     /ei);
-			    $t->xprint ($_);
-			}
-		    }
-		    $in->xclose;
-		    $t->xclose;
-		    &$deliver($t->path,
-			      &$make_subfolder($folderpath, 0),
-			      Maybe_take_filename($filepath));
-		} else {
-		    &$deliver($filepath,
-			      &$make_subfolder($folderpath, 0));
-		}
-		xunlink $filepath;
-	    } else {
-		my $targetfolder= $targetbase . "/" . $folderpath->maybe_string($targetbase);
-		if (! -d $targetfolder) {
-		    xmkdir $targetfolder;
-		    warn __("created new folder:")." '$targetfolder'\n";
-		    # better write special email? But that's bad for
-		    # testing.
-		} else {
-		    $targetfolder_is_symlink= readlink $targetfolder;
-		    # or do{ $!== E.... or..
-		}
+                    # isnt't it HACKY: in mailmoverlib I've got the
+                    # head in memory anyway.
+                    my $in= xopen_read $filepath;
+                    my $t= xtmpfile "$targetbase/tmp/"; # don't forget the end slash
+                    my $originator= do {
+                        my $By;
+                        while (<$in>) {
+                            if (/^$/) {
+                                for (1..10) {
+                                    $_=<$in>; last unless defined $_;
+                                    if (($By)= /^By:\s*(\S+)/) {
+                                        last;
+                                    }
+                                }
+                                last;
+                            }
+                        }
+                        $By
+                    };
+                    #warn "originator='$originator'";
+                    $in->xrewind;
+                    while (<$in>) {
+                        if (/^$/) {
+                            $t->xprint ($_);
+                            while (<$in>) {
+                                $t->xprint ($_);
+                            }
+                            last;
+                        } else {
+                            (s/^(subject:\s*)\[[^\]]+\]\s*(.*)/$1$2/si
+                             or
+                             s/^(from:\s*)(.*)/
+                                 my ($pre,$adr)=($1,$2);
+                                 if ($originator) {
+                                     $adr=~ s{"[^\"]*"}{"$originator"};
+                                 }
+                                 $pre.$adr
+                             /ei);
+                            $t->xprint ($_);
+                        }
+                    }
+                    $in->xclose;
+                    $t->xclose;
+                    &$deliver($t->path,
+                              &$make_subfolder($folderpath, 0),
+                              Maybe_take_filename($filepath));
+                } else {
+                    &$deliver($filepath,
+                              &$make_subfolder($folderpath, 0));
+                }
+                xunlink $filepath;
+            } else {
+                my $targetfolder= $targetbase . "/" . $folderpath->maybe_string($targetbase);
+                if (! -d $targetfolder) {
+                    xmkdir $targetfolder;
+                    warn __("created new folder:")." '$targetfolder'\n";
+                    # better write special email? But that's bad for
+                    # testing.
+                } else {
+                    $targetfolder_is_symlink= readlink $targetfolder;
+                    # or do{ $!== E.... or..
+                }
 
-		#warn "tainted" if tainted $targetfolder;# is ok
-		warn "tainted" if tainted $filename;
-		my $targetpath= "$targetfolder/$filename";
-		xlinkunlink($filepath,$targetpath);
-		warn "moved '$filename' to '$targetpath'\n" if $verbose;
-	    }
-	} else {
-	    warn "'$filename' not moved\n" if $verbose;
-	}
+                #warn "tainted" if tainted $targetfolder;# is ok
+                warn "tainted" if tainted $filename;
+                my $targetpath= "$targetfolder/$filename";
+                xlinkunlink($filepath,$targetpath);
+                warn "moved '$filename' to '$targetpath'\n" if $verbose;
+            }
+        } else {
+            warn "'$filename' not moved\n" if $verbose;
+        }
 
-	# Notifications about replies to own filtered email (hence the
-	# replies will likely be filtered too):
+        # Notifications about replies to own filtered email (hence the
+        # replies will likely be filtered too):
 
-	my $already_warned;
-	if (not $folderpath->is_inbox) {
-	    if ($from) {
-		if (is_own_emailaddress($from)) {
-		    save_is_own($mail);
-		} elsif (is_reply($mail) and not $mail->is_autoreply){
-		    # ^ XX this is *so* hacky, the decision tree
-		    # should be purely in Mailmover::Lib
-		    writewarnmail(__("Reply").": $quotedsubject",
-				  __("A followup to your email")."\n".
-				  __("     From")." $quotedfrom\n".
-				  __("  Subject")." $quotedsubject\n".
-				  __("has arrived in folder ").$quotedfolderpath
-				  .__(" eingetroffen").".\n");
-		    $already_warned=1;
-		}
-	    }
-	}
-	if ($important and !$already_warned){
-	    writewarnmail
-	      ((($folderpath->maybe_first_segment//"") eq "inbox-big" ?
-		__("Big") : __("Important"))
-	       .": $quotedsubject",
+        my $already_warned;
+        if (not $folderpath->is_inbox) {
+            if ($from) {
+                if (is_own_emailaddress($from)) {
+                    save_is_own($mail);
+                } elsif (is_reply($mail) and not $mail->is_autoreply){
+                    # ^ XX this is *so* hacky, the decision tree
+                    # should be purely in Mailmover::Lib
+                    writewarnmail(__("Reply").": $quotedsubject",
+                                  __("A followup to your email")."\n".
+                                  __("     From")." $quotedfrom\n".
+                                  __("  Subject")." $quotedsubject\n".
+                                  __("has arrived in folder ").$quotedfolderpath
+                                  .__(" eingetroffen").".\n");
+                    $already_warned=1;
+                }
+            }
+        }
+        if ($important and !$already_warned){
+            writewarnmail
+              ((($folderpath->maybe_first_segment//"") eq "inbox-big" ?
+                __("Big") : __("Important"))
+               .": $quotedsubject",
 
-	       __("Email with\n").
-	       __("     From")." $quotedfrom\n".
-	       __("  Subject")." $quotedsubject\n".
-	       __("has arrived in folder ").$quotedfolderpath
-	       .__(" eingetroffen").".\n");
-	}
+               __("Email with\n").
+               __("     From")." $quotedfrom\n".
+               __("  Subject")." $quotedsubject\n".
+               __("has arrived in folder ").$quotedfolderpath
+               .__(" eingetroffen").".\n");
+        }
 
-	# send autoreply:
+        # send autoreply:
 
-	if ($do_send_autoreply) {
-	    if ($folderpath->is_inbox or ($folderpath->maybe_first_segment//"") eq 'inbox-big') {
-		# make sure it is a manual, direct send (not mailing
-		# list, bulk sending, auto-responder..)
+        if ($do_send_autoreply) {
+            if ($folderpath->is_inbox or ($folderpath->maybe_first_segment//"") eq 'inbox-big') {
+                # make sure it is a manual, direct send (not mailing
+                # list, bulk sending, auto-responder..)
 
-		# XX check resent-from, owner-xyz ? or are those
-		# guaranteed to be filtered earlier as mailing list
-		# mails already?
+                # XX check resent-from, owner-xyz ? or are those
+                # guaranteed to be filtered earlier as mailing list
+                # mails already?
 
-		# Even after mailing list filtering, it's still
-		# possible to get precedence headers here.
-		if ($mail->is_list_precedence #  bulk, list
-		    or
-		    $mail->is_is_junk_precedence) {
-		    #warn "not filtered but still bulky email";
-		} else {
-		    # really not an autoreply?
-		    unless ($mail->is_autoreply) {
-			my $maybe_spamscore=$mail->maybe_spamscore;
-			if (defined $maybe_spamscore
-			    and $maybe_spamscore >= $max_auto_respond_spamscore) {
-			    # don't auto-respond to possible spams
-			} else {
-			    my $senderaddress= $mail->maybe_decoded_header("from");
-			    # ^- but didn't I do extraction for sms already?
-			    autoreply::send_if_not_already
-				($senderaddress,
-				 own_emailaddress (),
-				 scalar $mail->maybe_decoded_header("subject"))
-				  and warn __("sent autoreply")."\n";
-			}
-		    }
-		}
-	    }
-	}
-	1
+                # Even after mailing list filtering, it's still
+                # possible to get precedence headers here.
+                if ($mail->is_list_precedence #  bulk, list
+                    or
+                    $mail->is_is_junk_precedence) {
+                    #warn "not filtered but still bulky email";
+                } else {
+                    # really not an autoreply?
+                    unless ($mail->is_autoreply) {
+                        my $maybe_spamscore=$mail->maybe_spamscore;
+                        if (defined $maybe_spamscore
+                            and $maybe_spamscore >= $max_auto_respond_spamscore) {
+                            # don't auto-respond to possible spams
+                        } else {
+                            my $senderaddress= $mail->maybe_decoded_header("from");
+                            # ^- but didn't I do extraction for sms already?
+                            autoreply::send_if_not_already
+                                ($senderaddress,
+                                 own_emailaddress (),
+                                 scalar $mail->maybe_decoded_header("subject"))
+                                  and warn __("sent autoreply")."\n";
+                        }
+                    }
+                }
+            }
+        }
+        1
     } || do {
-	if ($DEBUG) {
-	    die $@
-	} else {
-	    push @warns, __("Error/exception:\n").$@;
-	}
+        if ($DEBUG) {
+            die $@
+        } else {
+            push @warns, __("Error/exception:\n").$@;
+        }
     };
 
     if (@warns) {
-	writewarnmail(__("Warnings for email")." $quotedsubject",
-		      __("Warnings for email").":\n".
-		      __("     From")." $quotedfrom\n".
-		      __("  Subject")." $quotedsubject\n".
-		      __("saved in folder")." $quotedfolderpath:\n\n".
-		      join "\n\n",@warns);
-	@warns=(); # !
+        writewarnmail(__("Warnings for email")." $quotedsubject",
+                      __("Warnings for email").":\n".
+                      __("     From")." $quotedfrom\n".
+                      __("  Subject")." $quotedsubject\n".
+                      __("saved in folder")." $quotedfolderpath:\n\n".
+                      join "\n\n",@warns);
+        @warns=(); # !
     }
 }
 
@@ -481,46 +481,46 @@ usage "only one source dir argument allowed"
 
 if ($sourcedir) {
   DO: {
-	xdirectory_paths ($sourcedir, *string_cmp)->for_each
-	  (sub { conditional_move_file($_[0],$targetbase) });
-	if ($opt_loop) {
-	    sleep $opt_loop;
-	    print STDERR "$myname: redoiing\n" if $DEBUG;
-	    if (defined $opt_repeat) {
-		redo DO if --$opt_repeat;
-	    } else {
-		redo DO
-	    }
-	}
+        xdirectory_paths ($sourcedir, *string_cmp)->for_each
+          (sub { conditional_move_file($_[0],$targetbase) });
+        if ($opt_loop) {
+            sleep $opt_loop;
+            print STDERR "$myname: redoiing\n" if $DEBUG;
+            if (defined $opt_repeat) {
+                redo DO if --$opt_repeat;
+            } else {
+                redo DO
+            }
+        }
     }
 }
 elsif ($opt_files) {
     for my $filepath (@args) {
-	conditional_move_file($filepath,$targetbase);
+        conditional_move_file($filepath,$targetbase);
     }
 }
 elsif ($opt_stdin) {
     if ($opt_maildirs) {
-	my $path= "$targetbase/tmp/".$maildirbasefolder->create_filename;
-	WithRepl_eval {
-	    my $t= xsysopen_excl $path, 0600;
-	    my $in= bless *STDIN{IO},"Chj::IO::File";
-	    $in->xsendfile_to($t);
-	    $in->xclose;
-	    $t->xflush; # must flush before sync.
-	    # XX add to Chj::IO::File ?
-	    require IO::Handle;
-	    IO::Handle::sync ($t) or die "IO::Handle::sync: $!";
-	    $t->xclose; # (must remain open for sync call)
-	    conditional_move_file ($path,$targetbase);
-	    1
-	} || do {
-	    my $e=$@;
-	    unlink $path; # sort of tmpfile functionality recovery
-	    die $e
-	};
+        my $path= "$targetbase/tmp/".$maildirbasefolder->create_filename;
+        WithRepl_eval {
+            my $t= xsysopen_excl $path, 0600;
+            my $in= bless *STDIN{IO},"Chj::IO::File";
+            $in->xsendfile_to($t);
+            $in->xclose;
+            $t->xflush; # must flush before sync.
+            # XX add to Chj::IO::File ?
+            require IO::Handle;
+            IO::Handle::sync ($t) or die "IO::Handle::sync: $!";
+            $t->xclose; # (must remain open for sync call)
+            conditional_move_file ($path,$targetbase);
+            1
+        } || do {
+            my $e=$@;
+            unlink $path; # sort of tmpfile functionality recovery
+            die $e
+        };
     } else {
-	die "delivery from stdin only implemented for --maildirs"
+        die "delivery from stdin only implemented for --maildirs"
     }
 }
 else {

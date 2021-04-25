@@ -28,9 +28,9 @@ use FP::Combinators qw(:all);
 
 my $heads=
   array_map (compose(cut_method ("Mailmover::MailHead", "new_from_path"),
-		     fun ($file) { "testcorpus/$file" }),
-	     ['1441781601.28365.servi:2,S',
-	      '1439194193.2749.servi:2,S']);
+                     fun ($file) { "testcorpus/$file" }),
+             ['1441781601.28365.servi:2,S',
+              '1439194193.2749.servi:2,S']);
 
 TEST { array_map the_method ("maybe_decoded_header","subject"), $heads }
   [
@@ -63,7 +63,7 @@ TEST { array_map the_method ("maybe_mailinglist_id"), $heads }
   ];
 
 TEST { array_map the_method ("maybe_header_ignoringidenticalcopies", "precedence"),
-	 $heads }
+         $heads }
   [
    undef,
    undef

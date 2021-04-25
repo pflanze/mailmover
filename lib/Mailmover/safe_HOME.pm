@@ -29,9 +29,9 @@ use strict; use warnings FATAL => 'uninitialized';
 sub xeffectiveuserhome () {
     my $uid= $>;
     my ($name,$passwd,$_uid,$gid,
-	$quota,$comment,$gcos,$dir,$shell,$expire)
+        $quota,$comment,$gcos,$dir,$shell,$expire)
       = getpwuid $uid
-	or die "unknown user for uid $uid";
+        or die "unknown user for uid $uid";
     $dir
 }
 # /COPY

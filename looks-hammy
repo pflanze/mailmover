@@ -54,12 +54,12 @@ $cut_off_score= $maybe_cut_off_score if defined $maybe_cut_off_score;
 
 my $head= do {
     if ($source eq "-") {
-	my $in= glob_to_fh *STDIN;
-	my $h= Mailmover::MailHead->new_from_fh($in);
-	$in->xrewind;
-	$h
+        my $in= glob_to_fh *STDIN;
+        my $h= Mailmover::MailHead->new_from_fh($in);
+        $in->xrewind;
+        $h
     } else {
-	Mailmover::MailHead->new_from_path($source);
+        Mailmover::MailHead->new_from_path($source);
     }
 };
 

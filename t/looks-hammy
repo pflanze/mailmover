@@ -17,13 +17,13 @@ my $expect=
 for (@$expect) {
     my ($path, $maybe_score, $expected_result)= @$_;
   SKIP: {
-	if (-e $path) {
-	    is system ("./looks-hammy", $path, defined($maybe_score)? $maybe_score : ()),
-	      $expected_result*256,
-		$path;
-	} else {
-	    skip "test file '$path' does not exist", 1
-	}
+        if (-e $path) {
+            is system ("./looks-hammy", $path, defined($maybe_score)? $maybe_score : ()),
+              $expected_result*256,
+                $path;
+        } else {
+            skip "test file '$path' does not exist", 1
+        }
     }
 }
 

@@ -69,17 +69,17 @@ sub __ ($) {
     my ($str)=@_;
     defined $l10n_lang or die '$l10n_lang is not set';
     if (my $h= $$translations{$str}) {
-	if (defined (my $v= $$h{$l10n_lang})) {
-	    $v
-	} else {
-	    warn "missing translation for '$str' to '$l10n_lang'"
-	      unless ($l10n_lang eq "en");
-	    $str
-	}
+        if (defined (my $v= $$h{$l10n_lang})) {
+            $v
+        } else {
+            warn "missing translation for '$str' to '$l10n_lang'"
+              unless ($l10n_lang eq "en");
+            $str
+        }
     } else {
-	warn "missing translations for '$str'"
-	  unless ($l10n_lang eq "en");
-	$str
+        warn "missing translations for '$str'"
+          unless ($l10n_lang eq "en");
+        $str
     }
 }
 

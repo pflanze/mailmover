@@ -40,12 +40,12 @@ my $DEBUG=0;
 for (my $i=0; $i<=$#ARGV; $i++) {
     local $_=$ARGV[$i];
     if (/^--?h(elp)?$/) {
-    	usage
+        usage
     } elsif ($_ eq '--') {
-    	push @args, @ARGV[$i+1..$#ARGV];
-    	last;
+        push @args, @ARGV[$i+1..$#ARGV];
+        last;
     } elsif (/^--?d(ebug)?$/) {
-	$DEBUG=1;
+        $DEBUG=1;
 #     } elsif (/^--?X(?:XXX(?:=(.*))?)?$/) {
 #         if (defined $1) {
 #             $XXX=$1
@@ -53,9 +53,9 @@ for (my $i=0; $i<=$#ARGV; $i++) {
 #             $XXX=$ARGV[++$i] or usage "missing argument for '$_' option";
 #         }
     } elsif (/^-./) {
-    	usage("Unknown option '$_'\n");
+        usage("Unknown option '$_'\n");
     } else {
-    	push @args, $_
+        push @args, $_
     }
 }
 

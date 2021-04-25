@@ -26,11 +26,11 @@ sub exn (&) {
     my ($thunk)=@_;
     my $res;
     eval {
-	$res= &$thunk();
-	1
+        $res= &$thunk();
+        1
     } ? $res : do {
-	my $e= $@;
-	$e =~ /(.*?):/ ? $1 : die $e
+        my $e= $@;
+        $e =~ /(.*?):/ ? $1 : die $e
     }
 }
 

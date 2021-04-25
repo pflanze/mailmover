@@ -33,7 +33,7 @@ use Chj::TEST;
     package Chj::TransparentNoncachingLazy::Promise;
     use overload '""'=> 'force';
     sub force {
-	shift->()
+        shift->()
     }
 }
 
