@@ -144,7 +144,7 @@ for (my $i=0; $i<=$#ARGV; $i++) {
         $opt_maildirs=1;
     } elsif (/^--?(v+)(?:erbose)?$/) {
         $verbose+=length($1);
-    } elsif (/^--files$/) {
+    } elsif ($_ eq "-f" or /^--files$/) {
         $opt_files=1;
     } elsif (/^--stdin$/) {
         $opt_stdin=1;
