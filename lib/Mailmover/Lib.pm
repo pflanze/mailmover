@@ -193,7 +193,7 @@ sub classify {
                 (($list=~ /debian-security-announce/i and
                   content_is_important_package ($content_)) ? *important
                  : *normal);
-            return &$class (MovePath "list", $list);
+            return $class->(MovePath "list", $list);
         }
     }
 
