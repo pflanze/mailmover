@@ -174,7 +174,7 @@ sub classify {
                   my $interpolated= eval('"' . $formula . '"') // die $@;
                   "$which: $formula [ $interpolated ]"
               };
-              
+
               if (eval($high_spamscore) // die $@) {
                   $show_with_interpol->("high_spamscore", $high_spamscore)
               } elsif (defined $maybe_spamscore_old and eval($mix_with_old) // die $@) {
@@ -183,7 +183,7 @@ sub classify {
                   ''
               }
         });
-        
+
         if ($possible_spam_reason) {
             Log $filename, "reason for 'possible spam': $possible_spam_reason";
             return normal MovePath "list", __("possible spam");
