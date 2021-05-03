@@ -70,6 +70,206 @@ sub content_is_important_package ($) {
     main::is_important_package ($package)
 }
 
+package Mailmover::Hex {
+    use Exporter qw(import);
+    our @EXPORT=qw(unsafe_hexdigit2dec);
+    my $O0= ord '0';
+    my $O9= ord '9';
+    my $OA= ord 'A';
+    sub unsafe_hexdigit2dec {
+        #only works for a single 0-9A-F character
+        my $d = ord $_[0];
+        ($d >= $O0 and $d <= $O9) ? $d - $O0 : ($d - $OA + 10)
+    }
+}
+
+# XX move to separate module? But this one is currently (just) used
+# for *MIME parts*, not full mails, careful! Also, may only work with
+# linebreaks normalized to \n.
+package Mailmover::HeadAndBody {
+    use Encode qw(decode encode _utf8_off);
+    Mailmover::Hex->import("unsafe_hexdigit2dec");
+
+    use FP::Struct ["head", "body"], "FP::Struct::Show";
+
+    sub decoded_body {
+	my $self=shift;
+        my $h= $self->head;
+	my $b= $self->body;
+	my $cte= $h->maybe_decoded_header('Content-Transfer-Encoding') // "";
+	if ($cte=~ /quoted-printable/) {
+	    $b=~ s{=([0-9A-F])([0-9A-F])}{
+		chr(unsafe_hexdigit2dec($1)*16 + unsafe_hexdigit2dec($2))
+            }sge;
+	    $b=~ s{=\n}{}sg;
+	}
+	my $ct= $h->maybe_decoded_header ('Content-Type') // "";
+	if (my ($charset)= $ct=~ /charset\s*=\s*"?([^"\s=,;]+)"?/i) {
+	    decode($charset, $b)
+	} else {
+	    $b
+        }
+    }
+
+    sub content_type {
+	# "" if not declared
+	my $self=shift;
+        my $h= $self->head;
+	my $ct= $h->maybe_decoded_header ('Content-Type') // "";
+	$ct=~ s/;.*//s;
+	$ct=~ s/\s//sg;
+	lc $ct
+    }
+
+    sub is_plaintext {
+	my $self=shift;
+        my $ct= $self->content_type;
+	$ct eq "text/plain" or $ct eq ""
+    }
+
+    sub is_html {
+	my $self=shift;
+        my $ct= $self->content_type;
+	$ct eq "text/html" or $ct eq ""
+    }
+
+    _END_
+}
+Mailmover::HeadAndBody::constructors->import;
+
+sub string_to_HeadAndBody {
+    @_==1 or die "need 1 arg";
+    my @hb= split /\n\n/, $_[0], 2;
+    @hb == 2 or die "missing separator between head and body";
+    my ($headstr, $body)= @hb;
+    open my $in, "<", \$headstr or die "?";
+    bless $in, "Chj::IO::File"; # uh hack. but works?
+    my $head= Mailmover::MailHead->new_from_fh($in);
+    HeadAndBody($head, $body)
+}
+
+sub html_to_plain {
+    my ($str)= @_;
+    $str=~ s/\n/ /sg;
+
+    # Tag conversions:
+    $str=~ s/<br[^<>]*>/\n/sg;
+    $str=~ s{<blockquote[^<>]*>(.*?)</blockquote[^<>]*>}{
+         my $inner= $1;
+	 join '', map { "&gt;$_\n" } split /\n/, $inner
+    }sge;
+    $str=~ s/<[^<>]*>//sg;
+
+    # Escape conversions:
+    $str=~ s/&#(\d+);/chr $1/sge;
+    $str=~ s/&amp;/&/sg;
+    $str=~ s/&lt;/</sg;
+    $str=~ s/&gt;/>/sg;
+
+    $str
+}
+
+sub plaintext_strip_noise {
+    # strip mail signature and quoted parts
+    my ($str)= @_;
+    
+    # mail signature:
+    $str=~ s/\n-- *\n.*//s;
+    
+    # quoted part with 'introduction' line(s) (1 or 2 lines):
+    $str=~ s/^ ?On [^\n]*(?:\n[^\n]*)?\bwrote: *\n{1,2} ?>.*$//mg;
+    
+    # other quoted lines:
+    $str=~ s/^ ?>.*$//mg;
+    
+    $str
+}
+
+sub content_as_plaintexts {
+    # returns all variants (as multiple values) of texts, so that all
+    # can be searched
+    my ($head, $content)= @_;
+    # needed?
+    $content=~ s/\r\n/\n/sg;
+    $content=~ s/\r/\n/sg;
+    # /needed?
+    my $asplain= sub {
+	$content
+    };
+    if ($head ->maybe_header('mime-version')) {
+	if (defined (my $ct= $head ->maybe_header('Content-Type'))) {
+	    if (my ($boundary)= $ct=~ /boundary\s*=\s*"([^"]+)"/s) {
+		my @parts= 
+		    split /(?:^|\n)--\Q$boundary\E(?:\n|--\n?\z)/s, $content;
+		if (@parts > 1) {
+		    my $f= shift @parts;
+		    # $f eq '' or die "missing mime separator at beginning";
+                    # Ah, can be things like "This is an OpenPGP/MIME
+                    # signed message (RFC 4880 and 3156)". Have to
+                    # simply ignore them.
+		}
+		my @p= map { string_to_HeadAndBody $_ } @parts;
+
+		my $maybe_plain = do {
+		    if (my @plain= grep { $_->is_plaintext } @p) {
+			$plain[0]->decoded_body
+		    } else { 
+			undef
+		    }
+		};
+		my $maybe_html = do {
+		    if (my @html= grep { $_->is_html } @p) {
+			html_to_plain($html[0]->decoded_body)
+		    } else {
+			undef
+		    }
+		};
+		my $maybe_other = do {
+		    if (defined $maybe_plain or defined $maybe_html) {
+			undef
+		    } else {
+			$p[0]->decoded_body
+		    }
+		};
+
+		grep { 
+		    defined $_
+	        } $maybe_plain, $maybe_html, $maybe_other
+	    } else {
+		$asplain->()
+	    }
+	} else {
+	    $asplain->()
+	}
+    } else {
+	$asplain->()
+    }
+}
+
+sub is_unsubscribecrap ($$) {
+    my ($head, $content)= @_;
+    my @plain= content_as_plaintexts($head, $content);
+    my @stripped = map {
+	plaintext_strip_noise $_ 
+    } @plain;
+    for (@stripped) {
+	local $_= lc $_;
+	s/\W+/ /sg;
+	s/\s+/ /sg;
+	next if length($_) > 200;
+	my $s= qr{ *};
+	return 1 if (
+	    /^ $s (please)? $s remove $s me/sx
+	    or
+	    /^ $s (please)? $s remove $s from/sx
+	    or 
+	    /^ $s unsubscribe/sx
+	    );
+    }
+    0
+}
+
+
 # From which score on mails are moved to "possible spam" (versus
 # "spam" which is the target when SA said it is spam, usually 5)
 our $possible_spam_minscore; # see default_mailmover_config.pl
@@ -187,7 +387,12 @@ sub classify {
         if ($possible_spam_reason) {
             Log $filename, "reason for 'possible spam': $possible_spam_reason";
             return normal MovePath "list", __("possible spam");
-        } else {
+        } elsif (! $is_ham and is_unsubscribecrap($head, force($content_))) {
+	    # "misusing" $is_ham here to indicate not wanting that
+	    # mail to be filtered out of the normal mailing list box,
+	    # too; it's very similar to spam handling, after all.
+	    return normal MovePath "unsubscribecrap";
+	} else {
             warn "'$filename': mailinglist $list\n" if $DEBUG;
             my $class=
                 (($list=~ /debian-security-announce/i and
