@@ -344,7 +344,8 @@ sub classify {
     };
     my $is_possible_spam= (!$is_ham
                            and defined($maybe_mailmover_spamscore)
-                           and $maybe_mailmover_spamscore >= $possible_spam_minscore);
+                           and ($maybe_mailmover_spamscore
+                                >= $possible_spam_minscore));
 
     my $list= $head->maybe_mailinglist_id;
     if ($list) {
@@ -364,7 +365,8 @@ sub classify {
 
               # for a list mail, allow higher scores (somehow SA finds
               # bad things in lists per se)
-              my $high_spamscore = '$spamscore > (1 + $specific_list_allowance)';
+              my $high_spamscore =
+                  '$spamscore > (1 + $specific_list_allowance)';
               my $mix_with_old =
                   '$spamscore <= 1 and (2*($spamscore-1) + $maybe_spamscore_old) > $specific_list_allowance*2';
               # $mix_with_old=~ s/\n\s+/\n/sg;
@@ -377,7 +379,8 @@ sub classify {
 
               if (eval($high_spamscore) // die $@) {
                   $show_with_interpol->("high_spamscore", $high_spamscore)
-              } elsif (defined $maybe_spamscore_old and eval($mix_with_old) // die $@) {
+              } elsif (defined $maybe_spamscore_old and
+                       eval($mix_with_old) // die $@) {
                   $show_with_interpol->("mix_with_old", $mix_with_old)
               } else {
                   ''
