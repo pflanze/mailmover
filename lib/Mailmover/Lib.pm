@@ -359,7 +359,7 @@ sub classify {
     my $_is_spam= $head->is_spam;
     my $is_spam= $is_ham ? 0 : $_is_spam;
 
-    if ($is_spam and is_whitelisted($filename, $head, $size_, $content_)) {
+    if (!$is_ham and is_whitelisted($filename, $head, $size_, $content_)) {
         Log $filename, "is_whitelisted";
         $is_ham= 1;
         $is_spam= 0;
