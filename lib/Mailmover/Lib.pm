@@ -348,9 +348,15 @@ sub normal ($) {
 sub classify {
     my ($filename, $is_ham, $f, $head, $size_, $content_)=@_;
 
-    my $is_spam= $is_ham ? 0 :
-        ($head->is_spam and not
-         is_whitelisted($filename, $head, $size_, $content_));
+    my $_is_spam= $head->is_spam;
+    my $is_spam= $is_ham ? 0 : $_is_spam;
+
+    if ($_is_spam and is_whitelisted($filename, $head, $size_, $content_)) {
+        Log $filename, "is_whitelisted";
+        $is_ham= 1;
+        $is_spam= 0;
+    }
+
     if ($is_spam) {
         warn "'$filename' is spam\n" if $DEBUG;
         return normal MovePath __("spam");
