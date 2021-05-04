@@ -353,7 +353,10 @@ sub classify {
 
     if (!$is_ham and is_whitelisted($filename, $head, $size_, $content_)) {
         Log $filename, "is_whitelisted";
-        $is_ham= 1;
+        $is_ham= 1; # XX: hmm this makes is_unsubscribecrap be
+                    # bypassed; this is fine as long as whitelisting
+                    # is for BTS mails. Although might always be fine
+                    # if bayes picks up on the unsubscribe.
         $is_spam= 0;
     }
 
