@@ -318,16 +318,8 @@ sub is_whitelisted ($$$$) {
     my $cl= head_maybe_bayesclass $head;
     my $white_enough = (defined $cl and bayesclass_le $cl, "0000");
     ($white_enough and
-     (
-      # Debian PR system messages (if white enough)
-      defined($head->maybe_first_header("X-Debian-PR-Message"))
-      or
-      # Debian BTS?
-      do {
-          my $xloop= $head->maybe_first_header("X-Loop");
-          defined $xloop and $xloop eq 'owner@bugs.debian.org'
-      }
-     ))
+     # allow Debian PR system messages (if white enough)
+     defined($head->maybe_first_header("X-Debian-PR-Message")))
 }
 
 
