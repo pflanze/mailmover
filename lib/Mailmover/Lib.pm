@@ -325,7 +325,7 @@ sub is_whitelisted ($$$$) {
       # Debian BTS?
       do {
           my $xloop= $head->maybe_first_header("X-Loop");
-          defined $xloop and $xloop eq 'owner@bugs.debian.org'
+          defined $xloop and $xloop =~ /\b\Qowner\@bugs.debian.org\E\b/
       }
      ))
 }
