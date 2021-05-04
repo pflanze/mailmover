@@ -33,6 +33,7 @@ use Mailmover::MovePath;
 use Mailmover::MailUtil qw(pick_out_of_anglebrackets);
 use Mailmover::MailHead;
 use Mailmover::l10n;
+use Chj::TEST;
 
 # For printing to stderr (and then stored in log dir if using
 # `bin/init-mailmover`):
@@ -270,6 +271,58 @@ sub is_unsubscribecrap ($$) {
 }
 
 
+sub bayesclass_cmp ($$) {
+    # higher is spammier
+    my ($a, $b)=@_;
+    (($a <=> $b) or
+     length($b) <=> length($a))
+}
+TEST {
+    [ sort { bayesclass_cmp $a, $b }
+      qw( 0000 00 95 000 10 999 99 9999 ) ]
+} ['0000', '000', '00', '10', '95', '99', '999', '9999'];
+
+sub bayesclass_lt ($$) { &bayesclass_cmp(@_) < 0 }
+TEST { bayesclass_lt "00", "000" } '';
+TEST { bayesclass_lt "00", "00" } '';
+TEST { bayesclass_lt "99", "999" } 1;
+sub bayesclass_le ($$) { &bayesclass_cmp(@_) <= 0 }
+TEST { bayesclass_le "00", "000" } '';
+TEST { bayesclass_le "00", "00" } 1;
+TEST { bayesclass_le "99", "999" } 1;
+
+
+sub head_maybe_bayesclass ($) {
+    # The most extreme of the BAYES_(\d+); use it with bayesclass_cmp,
+    # bayesclass_lt or bayesclass_le to compare against your desired
+    # cutoff.
+    my ($head)=@_;
+    if (defined (my $v= $head->maybe_first_header('X-Spam-Status'))) {
+        # If there are multiple bayes classifications they are all
+        # eithe /0+/ or /9+/, right?, so this just sorts by length, so
+        # we will pick the last as that one is the most extreme. Do
+        # *not* use bayesclass_cmp!
+        if (my @b= sort $v=~ /BAYES_(\d+)/g) {
+            $b[-1]
+        } else {
+            undef
+        }
+    } else {
+        undef
+    }
+}
+
+
+sub is_whitelisted ($$$$) {
+    my ($filename, $head, $size_, $content_)= @_;
+    my $cl= head_maybe_bayesclass $head;
+    my $white_enough = (defined $cl and bayesclass_le $cl, "0000");
+    ($white_enough and
+     # allow Debian PR system messages (if white enough)
+     defined($head->maybe_first_header("X-Debian-PR-Message")))
+}
+
+
 # From which score on mails are moved to "possible spam" (versus
 # "spam" which is the target when SA said it is spam, usually 5)
 our $possible_spam_minscore; # see default_mailmover_config.pl
@@ -295,7 +348,9 @@ sub normal ($) {
 sub classify {
     my ($filename, $is_ham, $f, $head, $size_, $content_)=@_;
 
-    my $is_spam= $is_ham ? 0 : $head->is_spam;
+    my $is_spam= $is_ham ? 0 :
+        ($head->is_spam and not
+         is_whitelisted($filename, $head, $size_, $content_));
     if ($is_spam) {
         warn "'$filename' is spam\n" if $DEBUG;
         return normal MovePath __("spam");
@@ -317,11 +372,6 @@ sub classify {
     }
 
     my $maybe_spamscore_old= $head->maybe_spamscore('X-Old-Spam-Status');
-    my $maybe_bayes_=
-      lazy {
-          my $v= $head->maybe_first_header('X-Spam-Status');
-          defined $v ? ($v=~ /BAYES_(\d+)/ ? $1 : undef) : undef
-      };
     my $maybe_mailmover_spamscore = do {
         my $maybe_spamscore= $head->maybe_spamscore;
         defined $maybe_spamscore ? do {
