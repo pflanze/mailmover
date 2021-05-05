@@ -34,6 +34,7 @@ use Mailmover::MailUtil qw(pick_out_of_anglebrackets);
 use Mailmover::MailHead;
 use Mailmover::l10n;
 use Chj::TEST;
+use FP::Failure;
 
 # For printing to stderr (and then stored in log dir if using
 # `bin/init-mailmover`):
@@ -138,10 +139,10 @@ package Mailmover::HeadAndBody {
 }
 Mailmover::HeadAndBody::constructors->import;
 
-sub string_to_HeadAndBody {
+sub string_to_fallible_HeadAndBody {
     @_==1 or die "need 1 arg";
     my @hb= split /\n\n/, $_[0], 2;
-    @hb == 2 or die "missing separator between head and body";
+    @hb == 2 or return failure("missing separator between head and body");
     my ($headstr, $body)= @hb;
     open my $in, "<", \$headstr or die "?";
     bless $in, "Chj::IO::File"; # uh hack. but works?
@@ -155,9 +156,14 @@ Mailmover::MailHead::Header::constructors->import;
 use FP::PureArray;
 
 TEST {
-    string_to_HeadAndBody "To: fun\nFrom: bla\n\nThe body."
+    string_to_fallible_HeadAndBody "To: fun\nFrom: bla\n\nThe body."
 }
 HeadAndBody(MailHead(purearray(), +{from => purearray(Header('From', 'bla')), to => purearray(Header('To', 'fun'))}), 'The body.');
+
+TEST {
+    string_to_fallible_HeadAndBody "To: fun\nFrom: bla\nThe body."
+}
+failure("missing separator between head and body");
 
 
 sub html_to_plain {
@@ -225,7 +231,8 @@ sub content_as_plaintexts {
                 # is, the regex will make it be removed. If it isn't,
                 # the last, cut off, part will simply be the last part
                 # and not be complete!
-		my @p= map { string_to_HeadAndBody $_ } @parts;
+		my @p= grep { $_ }
+                       map { string_to_fallible_HeadAndBody $_ } @parts;
 
 		my $maybe_plain = do {
 		    if (my @plain= grep { $_->is_plaintext } @p) {
