@@ -42,6 +42,18 @@ sub Log {
         or warn "can't write to stderr: $!";
 }
 
+sub perhaps_eval (&) {
+    my $res;
+    eval {
+        $res= $_[0]->();
+        1
+    } ? $res : do {
+        my ($_package, $filename, $line) = caller;
+        Log "perhaps_eval at $filename line $line caught exception: $@";
+        ()
+    }
+}
+
 # For output to report mails delivered to output Maildir's inbox:
 our ($DEBUG,$verbose);
 
@@ -139,6 +151,7 @@ package Mailmover::HeadAndBody {
 Mailmover::HeadAndBody::constructors->import;
 
 sub string_to_HeadAndBody {
+    # throws exceptions on errors!
     @_==1 or die "need 1 arg";
     my @hb= split /\n\n/, $_[0], 2;
     @hb == 2 or die "missing separator between head and body";
@@ -158,6 +171,18 @@ TEST {
     string_to_HeadAndBody "To: fun\nFrom: bla\n\nThe body."
 }
 HeadAndBody(MailHead(purearray(), +{from => purearray(Header('From', 'bla')), to => purearray(Header('To', 'fun'))}), 'The body.');
+
+TEST_EXCEPTION {
+    string_to_HeadAndBody "To: fun\nFrom: bla\nThe body."
+} "missing separator between head and body";
+
+# TEST {
+#     perhaps_eval { string_to_HeadAndBody "To: fun\nFrom: bla\nThe body." }
+# } ();
+
+# It would actually not have thrown!:
+TEST { string_to_HeadAndBody "To: fun\nFrom a : bla\n\n" }
+HeadAndBody(MailHead(purearray('Header of unknown format: \'From a : bla\''), +{to => purearray(Header('To', 'fun'))}), '');
 
 
 sub html_to_plain {
@@ -225,7 +250,7 @@ sub content_as_plaintexts {
                 # is, the regex will make it be removed. If it isn't,
                 # the last, cut off, part will simply be the last part
                 # and not be complete!
-		my @p= map { string_to_HeadAndBody $_ } @parts;
+		my @p= map { perhaps_eval { string_to_HeadAndBody $_ } } @parts;
 
 		my $maybe_plain = do {
 		    if (my @plain= grep { $_->is_plaintext } @p) {
