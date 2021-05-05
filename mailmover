@@ -38,6 +38,7 @@ use FP::Untainted qw(untainted untainted_with);
 use FP::Optional qw(optionally);
 use Mailmover::MovePath;
 use Mailmover::l10n;
+use Chj::TEST qw(run_tests);
 
 $ENV{PATH}= untainted ($ENV{PATH});
 # just trust it, it's always under our control, isnt't it?
@@ -84,6 +85,8 @@ sub usage {
 
   --ham               mail(s) is/are ham, ignore X-Spam-Status headers
 
+  --test              run the unit tests of the used modules
+
   '/filtered' is appended to targetbase to get the real target
   directory if -m option is not given.
 
@@ -102,7 +105,8 @@ my ($opt_config,
     $opt_is_ham,
     $opt_maildirs,
     $opt_files,
-    $opt_stdin);
+    $opt_stdin,
+    $opt_test);
 for (my $i=0; $i<=$#ARGV; $i++) {
     local $_=$ARGV[$i];
     if (/^--?h(elp)?$/) {
@@ -150,12 +154,21 @@ for (my $i=0; $i<=$#ARGV; $i++) {
         $opt_stdin=1;
     } elsif (/^--ham$/) {
         $opt_is_ham=1;
+    } elsif (/^--test$/) {
+        $opt_test=1;
     } elsif (/^-./) {
         usage("Unknown option '$_'\n");
     } else {
         push @args, $_
     }
 }
+
+if ($opt_test) {
+    # simply all of them? Chj::TEST can't restrict per dir, right?
+    my $res= run_tests;
+    exit ($res->failures ? 1 : 0);
+}
+
 usage unless @args;
 
 usage "give exactly one of --stdin / --files / --dir"
