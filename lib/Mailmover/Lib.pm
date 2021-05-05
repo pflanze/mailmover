@@ -176,9 +176,9 @@ TEST_EXCEPTION {
     string_to_HeadAndBody "To: fun\nFrom: bla\nThe body."
 } "missing separator between head and body";
 
-# TEST {
-#     perhaps_eval { string_to_HeadAndBody "To: fun\nFrom: bla\nThe body." }
-# } ();
+TEST {
+    perhaps_eval { string_to_HeadAndBody "To: fun\nFrom: bla\nThe body." }
+} ();
 
 # It would actually not have thrown!:
 TEST { string_to_HeadAndBody "To: fun\nFrom a : bla\n\n" }
