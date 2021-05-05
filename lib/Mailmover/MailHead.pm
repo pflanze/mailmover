@@ -19,8 +19,7 @@ package Mailmover::MailHead;
 
 use strict; use warnings FATAL => 'uninitialized';
 
-{
-    package Mailmover::MailHead::Header;
+package Mailmover::MailHead::Header {
     use FP::Predicates;
     use Chj::chompspace;
 
@@ -28,7 +27,8 @@ use strict; use warnings FATAL => 'uninitialized';
       [
        [*is_string, 'name'],
        [*is_string, 'value']
-      ];
+      ],
+       "FP::Struct::Show";
 
     sub chompspace_value {
         my $s=shift;
@@ -67,7 +67,8 @@ use FP::Struct
   [
    [*is_purearray, 'errors'],
    [*is_hash, '_headers_by_name'], # hash_of purearray_of *is_header
-  ];
+  ],
+    "FP::Struct::Show";
 
 
 sub new_from_fh {

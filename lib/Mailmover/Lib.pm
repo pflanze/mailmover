@@ -149,6 +149,17 @@ sub string_to_HeadAndBody {
     HeadAndBody($head, $body)
 }
 
+# For the tests:
+Mailmover::MailHead::constructors->import;
+Mailmover::MailHead::Header::constructors->import;
+use FP::PureArray;
+
+TEST {
+    string_to_HeadAndBody "To: fun\nFrom: bla\n\nThe body."
+}
+HeadAndBody(MailHead(purearray(), +{from => purearray(Header('From', 'bla')), to => purearray(Header('To', 'fun'))}), 'The body.');
+
+
 sub html_to_plain {
     my ($str)= @_;
     $str=~ s/\n/ /sg;
