@@ -209,6 +209,11 @@ sub content_as_plaintexts {
                     # signed message (RFC 4880 and 3156)". Have to
                     # simply ignore them.
 		}
+                # NOTE: we're actually not checking if the end
+                # separator (mentioned in the regex) is present. If it
+                # is, the regex will make it be removed. If it isn't,
+                # the last, cut off, part will simply be the last part
+                # and not be complete!
 		my @p= map { string_to_HeadAndBody $_ } @parts;
 
 		my $maybe_plain = do {
