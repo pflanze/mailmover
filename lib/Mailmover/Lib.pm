@@ -170,7 +170,10 @@ use FP::PureArray;
 TEST {
     string_to_HeadAndBody "To: fun\nFrom: bla\n\nThe body."
 }
-HeadAndBody(MailHead(purearray(), +{from => purearray(Header('From', 'bla')), to => purearray(Header('To', 'fun'))}), 'The body.');
+HeadAndBody(MailHead(purearray(),
+                     +{from => purearray(Header('From', 'bla')),
+                       to => purearray(Header('To', 'fun'))}),
+            'The body.');
 
 TEST_EXCEPTION {
     string_to_HeadAndBody "To: fun\nFrom: bla\nThe body."
@@ -182,7 +185,9 @@ TEST {
 
 # It would actually not have thrown!:
 TEST { string_to_HeadAndBody "To: fun\nFrom a : bla\n\n" }
-HeadAndBody(MailHead(purearray('Header of unknown format: \'From a : bla\''), +{to => purearray(Header('To', 'fun'))}), '');
+HeadAndBody(MailHead(purearray('Header of unknown format: \'From a : bla\''),
+                     +{to => purearray(Header('To', 'fun'))}),
+            '');
 
 
 sub html_to_plain {
@@ -209,16 +214,16 @@ sub html_to_plain {
 sub plaintext_strip_noise {
     # strip mail signature and quoted parts
     my ($str)= @_;
-    
+
     # mail signature:
     $str=~ s/\n-- *\n.*//s;
-    
+
     # quoted part with 'introduction' line(s) (1 or 2 lines):
     $str=~ s/^ ?On [^\n]*(?:\n[^\n]*)?\bwrote: *\n{1,2} ?>.*$//mg;
-    
+
     # other quoted lines:
     $str=~ s/^ ?>.*$//mg;
-    
+
     $str
 }
 
