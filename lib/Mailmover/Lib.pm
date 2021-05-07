@@ -17,8 +17,8 @@ Mailmover::Lib
 
 package Mailmover::Lib;
 @ISA="Exporter"; require Exporter;
-@EXPORT=qw(analyze_file is_reply save_is_own Log);
-@EXPORT_OK=qw();
+@EXPORT=qw();
+@EXPORT_OK=qw(analyze_file is_reply save_is_own Log);
 %EXPORT_TAGS=(all=>[@EXPORT,@EXPORT_OK]);
 
 use strict; use warnings FATAL => 'uninitialized';

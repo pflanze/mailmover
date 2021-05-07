@@ -45,9 +45,11 @@ $ENV{PATH}= untainted ($ENV{PATH});
 
 my $do_send_autoreply=0;
 
-use Mailmover::Lib;
+use Mailmover::Lib
+    qw(analyze_file is_reply save_is_own Log);
+
 #use Mailmover::Autoreply;
-#XXX    require "$mydir/mailmover_autoreply.pm"
+#XX    require "$mydir/mailmover_autoreply.pm"
 die "unfinished" if $do_send_autoreply;
 
 use Chj::TransparentNoncachingLazy;
