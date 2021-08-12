@@ -88,6 +88,7 @@ sub usage {
   --ham               mail(s) is/are ham, ignore X-Spam-Status headers
 
   --test              run the unit tests of the used modules
+  --repl[=Namespace]  run repl, in given namespace or main
 
   '/filtered' is appended to targetbase to get the real target
   directory if -m option is not given.
@@ -108,7 +109,8 @@ my ($opt_config,
     $opt_maildirs,
     $opt_files,
     $opt_stdin,
-    $opt_test);
+    $opt_test,
+    $opt_repl);
 for (my $i=0; $i<=$#ARGV; $i++) {
     local $_=$ARGV[$i];
     if (/^--?h(elp)?$/) {
@@ -116,6 +118,12 @@ for (my $i=0; $i<=$#ARGV; $i++) {
     } elsif ($_ eq '--') {
         push @args, @ARGV[$i+1..$#ARGV];
         last;
+    } elsif (/^--repl(?:=(.*))?$/) {
+        if (defined $1 and length $1) {
+            $opt_repl=$1;
+        } else {
+            $opt_repl="main";
+        }
     } elsif (/^--config(?:=(.*))?$/) {
         if (defined $1 and length $1) {
             $opt_config=$1
@@ -169,6 +177,14 @@ if ($opt_test) {
     # simply all of them? Chj::TEST can't restrict per dir, right?
     my $res= run_tests;
     exit ($res->failures ? 1 : 0);
+}
+
+if (defined $opt_repl) {
+    require FP::Repl;
+    $opt_repl=~ /^\w+(?:::\w+)*\z/s or usage "invalid namespace '$opt_repl'";
+    eval "package $opt_repl; FP::Repl::repl();";
+    die $@ if $@;
+    exit 0;
 }
 
 usage unless @args;
