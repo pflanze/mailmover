@@ -193,7 +193,17 @@ sub maybe_decoded_header {
     my ($name,$as_charset)=@_;
     if (defined(my $h= $self->maybe_header($name))) {
         join("",
-             map{ encode_permissive $_->[0],$_->[1],$as_charset }
+             map {
+                 my $res;
+                 eval {
+                     # str, from, to
+                     $res = encode_permissive $_->[0], $_->[1], $as_charset;
+                     1
+                 } ? $res : do {
+                     warn "encoding error: $@";
+                     $_->[0]
+                 }
+             }
              decode_mimewords($h))
     } else {
         undef
